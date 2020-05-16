@@ -53,7 +53,19 @@ ResetVector:
     lda #01             ; enable BG1&3
     sta 212c            ; TM
 
+    jsr @InitTilemapBuffer
+
     ; ---- DMA transfers ---
+    ; Copy tilemap buffer to VRAM
+    tsx                 ; save stack pointer
+    pea 1000            ; vram dest addr (@2000 really, word steps)
+    pea @tilemap_buffer
+    lda #^tilemap_buffer
+    pha
+    pea 0800            ; nb of bytes to transfer
+    jsr @VramDmaTransfer
+    txs                 ; restore stack pointer
+
     ; Copy tileset.bin to VRAM
     tsx                 ; save stack pointer
     pea 0000            ; vram dest addr (@0000 really, word steps)
@@ -107,8 +119,28 @@ InitTilemapBuffer:
 ; tile number lowest 8 bits
 ; vert flip | hori flip | prio bit | pal no H | pal no M | pal no L | tile number 10th bit | tile number 9th bith
 ;**************************************
+    ldy #0002           ; pointer to map tile (start at 2, because 0 and 1 are map with/height)
+    ldx #0000           ; pointer to tilemap tile
 
+    phb                 ; save data bank register
+    lda #01
+    pha
+    plb                 ; DBR = 1
 
+    brk 00
+tilemap_loop:
+    lda @small_map,y
+    sta !tilemap_buffer,x
+    inx
+    lda #00
+    sta !tilemap_buffer,x
+    inx
+
+    iny
+    cpy #0402
+    bne @tilemap_loop
+
+    plb                 ; restore data bank register
     rts
 
 VramDmaTransfer:
