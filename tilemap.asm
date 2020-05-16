@@ -3,7 +3,21 @@
 ;**************************************
 .65816
 
-.org 8000
+.org 018000
+.base 8000
+
+tileset:
+    .incbin assets/tileset.bin
+tileset_palette:
+    .incbin assets/tileset-pal.bin
+small_map:
+    .incbin assets/small.bin
+
+.org 7e0000
+tilemap_buffer:
+    .rb 0800
+
+.org 008000
 .base 0000
 
 ResetVector:
@@ -21,12 +35,54 @@ ResetVector:
     sta 2100            ; INIDISP
     jsr @ClearRegisters
 
-    lda #0f         ; release forced blanking, set screen to full brightness
-    sta 2100        ; INIDISP
+    ; ---- BG settings
+    lda #01
+    sta 2105            ; BGMODE 1
 
-    lda #81         ; enable NMI, turn on automatic joypad polling
-    sta 4200        ; NMITIMEN
-    cli             ; enable interrupts
+    lda #00
+    sta 210d
+    sta 210d
+    sta 210e
+    sta 210e
+
+    lda #10             ; BG1 MAP @ VRAM[2000]
+    sta 2107            ; BG1SC
+    lda #00             ; BG1 tiles @ VRAM[0000]
+    sta 210b            ; BG12NBA
+
+    lda #01             ; enable BG1&3
+    sta 212c            ; TM
+
+    ; ---- DMA transfers ---
+    ; Copy tileset.bin to VRAM
+    tsx                 ; save stack pointer
+    pea 0000            ; vram dest addr (@0000 really, word steps)
+    pea @tileset
+    lda #^tileset
+    pha
+    pea 0400            ; nb of bytes to transfer
+    jsr @VramDmaTransfer
+    txs                 ; restore stack pointer
+
+    ; Copy tileset-pal.bin to CGRAM
+    tsx                 ; save stack pointer
+    lda #00             ; cgram dest addr (@0000 really, 2 bytes step)
+    pha
+    pea @tileset_palette
+    lda #^tileset_palette
+    pha
+    lda #20             ; bytes_to_trasnfer
+    pha
+    jsr @CgramDmaTransfer
+    txs                 ; restore stack pointer
+    ; ----
+
+    lda #0f             ; release forced blanking, set screen to full brightness
+    sta 2100            ; INIDISP
+
+    lda #81             ; enable NMI, turn on automatic joypad polling
+    sta 4200            ; NMITIMEN
+    cli                 ; enable interrupts
 
     jmp @MainLoop
 
@@ -43,6 +99,77 @@ NmiVector:
 
 MainLoop:
     jmp @MainLoop
+
+
+InitTilemapBuffer:
+;**************************************
+; tilemap format
+; tile number lowest 8 bits
+; vert flip | hori flip | prio bit | pal no H | pal no M | pal no L | tile number 10th bit | tile number 9th bith
+;**************************************
+
+
+    rts
+
+VramDmaTransfer:
+    phx                 ; save stack pointer
+    phd                 ; save direct page
+    tsc
+    tcd                 ; direct page = stack pointer
+
+    ldx 0c              ; vram dest addr
+    stx 2116
+
+    lda #18             ; VMDATAL 21*18*
+    sta 4301
+
+    ldx 0a              ; rom src addr
+    stx 4302
+    lda 09              ; rom src bank
+    sta 4304
+
+    ldx 07              ; nb of bytes to transfer
+    stx 4305
+
+    lda #01
+    sta 4300
+
+    lda #01
+    sta 420b
+
+    pld                 ; restore direct page
+    plx                 ; restore stack pointer
+    rts
+
+CgramDmaTransfer:
+    phx                 ; save stack pointer
+    phd                 ; save direct page
+    tsc
+    tcd                 ; direct page = stack pointer
+
+    lda 0b              ; cgram dest addr
+    sta 2121
+
+    lda #22
+    sta 4301
+
+    ldx 09              ; rom src addr
+    stx 4302
+    lda 08              ; rom src bank
+    sta 4304
+
+    lda 07              ; nb of bytes to transfer
+    sta 4305
+
+    lda #00
+    sta 4300
+
+    lda #01
+    sta 420b
+
+    pld
+    plx
+    rts
 
 ClearRegisters:
     stz 2101
