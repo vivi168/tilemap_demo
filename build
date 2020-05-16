@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ruby -I../SNES_Utils/lib ../SNES_Utils/bin/vas -f tilemap.asm
+
+cp out.smc  /mnt/c/Users/vbihl/Desktop/tilemap.smc
