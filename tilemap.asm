@@ -16,6 +16,8 @@ small_map:
 .org 7e0000
 tilemap_offset:
     .rb 2
+column_offset:
+    .rb 2
 tilemap_buffer:
     .rb 800
 
@@ -58,7 +60,8 @@ ResetVector:
     lda #01             ; enable BG1&3
     sta 212c            ; TM
 
-    jsr @InitTilemapBuffer
+    jsr @CopyMapColumnToTileMapBuffer
+    ;jsr @InitTilemapBuffer
 
     ; ---- DMA transfers ---
     ; Copy tilemap buffer to VRAM
@@ -117,6 +120,51 @@ NmiVector:
 MainLoop:
     jmp @MainLoop
 
+CopyMapColumnToTileMapBuffer:
+    phb                 ; save data bank register
+    lda #01
+    pha
+    plb                 ; DBR = 1
+
+    ldy #0003           ; pointer to map read start
+    sty @column_offset  ; column_offset = 0
+    ldy #0020           ; loop counter
+    ldx #0006           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes
+
+    brk 00
+copy_column_loop:
+    phy
+    rep #20
+    lda !column_offset
+    tay
+    clc
+    adc @small_map+2
+    sta !column_offset
+    sep #20
+
+    lda @small_map+6,y
+    ply
+    sta !tilemap_buffer,x
+    inx
+    lda #00
+    sta !tilemap_buffer,x
+    dex
+
+    rep #20
+    txa
+    clc
+    adc #0040           ; 0x40 because vram entry are 2 bytes
+    tax
+    sep #20
+
+    dey
+    bne @copy_column_loop
+
+    plb                 ; restore data bank register
+    rts
+
+CopyMapRowToTileMapBuffer:
+    rts
 
 InitTilemapBuffer:
 ;**************************************
@@ -133,7 +181,6 @@ InitTilemapBuffer:
     pha
     plb                 ; DBR = 1
 
-    brk 00
 tilemap_loop:
 
     rep #20
