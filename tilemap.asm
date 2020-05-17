@@ -11,11 +11,13 @@ tileset:
 tileset_palette:
     .incbin assets/tileset-pal.bin
 small_map:
-    .incbin assets/small.bin
+    .incbin assets/big.bin
 
 .org 7e0000
+tilemap_offset:
+    .rb 2
 tilemap_buffer:
-    .rb 0800
+    .rb 800
 
 .org 008000
 .base 0000
@@ -39,11 +41,14 @@ ResetVector:
     lda #01
     sta 2105            ; BGMODE 1
 
-    lda #00
+    lda #00             ; first write = lower byte
     sta 210d
-    sta 210d
+    lda #00             ; second write = upper 2 bits
+    sta 210d            ; horizontal scroll
+    lda #ff
     sta 210e
-    sta 210e
+    lda #03
+    sta 210e            ; vertical scroll. caution, offset by -1
 
     lda #10             ; BG1 MAP @ VRAM[2000]
     sta 2107            ; BG1SC
@@ -119,8 +124,9 @@ InitTilemapBuffer:
 ; tile number lowest 8 bits
 ; vert flip | hori flip | prio bit | pal no H | pal no M | pal no L | tile number 10th bit | tile number 9th bith
 ;**************************************
-    ldy #0002           ; pointer to map tile (start at 2, because 0 and 1 are map with/height)
-    ldx #0000           ; pointer to tilemap tile
+    ldy #0000           ; pointer to map read start
+    ldx #0000           ; pointer to tilemap write start
+    stx @tilemap_offset ; tilemap_offset = 0
 
     phb                 ; save data bank register
     lda #01
@@ -129,7 +135,33 @@ InitTilemapBuffer:
 
     brk 00
 tilemap_loop:
-    lda @small_map,y
+
+    rep #20
+    phy
+    tya
+    beq @continue_loop
+    dec
+    eor 01,s
+    and #0020
+    beq @add_offset
+    lda !tilemap_offset
+    clc
+    adc @small_map+2
+    sec
+    sbc #0020
+    sta !tilemap_offset
+
+add_offset:
+    tya
+    clc
+    adc !tilemap_offset
+    tay
+
+continue_loop:
+    sep #20
+
+    lda @small_map+6,y  ; +6: account for map size + width/height header
+    ply
     sta !tilemap_buffer,x
     inx
     lda #00
@@ -137,7 +169,7 @@ tilemap_loop:
     inx
 
     iny
-    cpy #0402
+    cpy #400            ; copy one full tilemap (32x32 tiles)
     bne @tilemap_loop
 
     plb                 ; restore data bank register
