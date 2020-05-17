@@ -14,6 +14,8 @@ small_map:
     .incbin assets/big.bin
 
 .org 7e0000
+map_offset:
+    .rb 2
 tilemap_offset:
     .rb 2
 tilemap_buffer:
@@ -59,7 +61,7 @@ ResetVector:
     sta 212c            ; TM
 
     jsr @CopyMapColumnToTileMapBuffer
-    jsr @CopyMapRowToTileMapBuffer
+    ;jsr @CopyMapRowToTileMapBuffer
     ;jsr @InitTilemapBuffer
 
     ; ---- DMA transfers ---
@@ -120,11 +122,13 @@ MainLoop:
     jmp @MainLoop
 
 ; PARAMS: map read start, map address
+; TODO: need to wrap begining of column if going outside
 CopyMapColumnToTileMapBuffer:
     ldy #0003           ; pointer to map read start, should be a PARAM
-    sty @tilemap_offset  ; tilemap_offset = 0
+    sty @map_offset
     ldy #0020           ; loop counter
-    ldx #0006           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    ldx #07c6           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    stx @tilemap_offset
 
     phb                 ; save data bank register
     lda #01
@@ -135,11 +139,11 @@ CopyMapColumnToTileMapBuffer:
 copy_column_loop:
     phy
     rep #20
-    lda !tilemap_offset
+    lda !map_offset
     tay
     clc
     adc @small_map+2
-    sta !tilemap_offset
+    sta !map_offset
     sep #20
 
     lda @small_map+6,y
@@ -155,6 +159,21 @@ copy_column_loop:
     clc
     adc #0040           ; 0x40 because vram entry are 2 bytes
     tax
+
+    ; here wrap at row 0 if necessary
+    sta !tilemap_offset
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    cmp #0020
+    bcc @skip_column_wrap
+    lda !tilemap_offset
+    and #001f
+    tax
+skip_column_wrap:
     sep #20
 
     dey
@@ -163,25 +182,26 @@ copy_column_loop:
     plb                 ; restore data bank register
     rts
 
+; TODO: need to wrap begining of row if going outside
 CopyMapRowToTileMapBuffer:
     ldy #0180           ; pointer to map read start, should be a PARAM
-    sty @tilemap_offset  ; tilemap_offset = 0
+    sty @map_offset  ; map_offset = 0
     ldy #0020           ; loop counter
-    ldx #0040           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    ldx #0042           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
 
     phb                 ; save data bank register
     lda #01
     pha
     plb                 ; DBR = 1
 
-    brk 00
+    ; brk 00
 copy_row_loop:
     phy
     rep #20
-    lda !tilemap_offset
+    lda !map_offset
     tay
     inc
-    sta !tilemap_offset
+    sta !map_offset
     sep #20
 
     lda @small_map+6,y
@@ -206,7 +226,7 @@ InitTilemapBuffer:
 ;**************************************
     ldy #0000           ; pointer to map read start
     ldx #0000           ; pointer to tilemap write start
-    stx @tilemap_offset ; tilemap_offset = 0
+    stx @map_offset ; map_offset = 0
 
     phb                 ; save data bank register
     lda #01
@@ -223,17 +243,17 @@ tilemap_loop:
     eor 01,s
     and #0020
     beq @add_offset
-    lda !tilemap_offset
+    lda !map_offset
     clc
     adc @small_map+2
     sec
     sbc #0020
-    sta !tilemap_offset
+    sta !map_offset
 
 add_offset:
     tya
     clc
-    adc !tilemap_offset
+    adc !map_offset
     tay
 
 continue_loop:
