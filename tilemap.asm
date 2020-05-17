@@ -16,8 +16,6 @@ small_map:
 .org 7e0000
 tilemap_offset:
     .rb 2
-column_offset:
-    .rb 2
 tilemap_buffer:
     .rb 800
 
@@ -61,6 +59,7 @@ ResetVector:
     sta 212c            ; TM
 
     jsr @CopyMapColumnToTileMapBuffer
+    jsr @CopyMapRowToTileMapBuffer
     ;jsr @InitTilemapBuffer
 
     ; ---- DMA transfers ---
@@ -120,26 +119,27 @@ NmiVector:
 MainLoop:
     jmp @MainLoop
 
+; PARAMS: map read start, map address
 CopyMapColumnToTileMapBuffer:
+    ldy #0003           ; pointer to map read start, should be a PARAM
+    sty @tilemap_offset  ; tilemap_offset = 0
+    ldy #0020           ; loop counter
+    ldx #0006           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+
     phb                 ; save data bank register
     lda #01
     pha
     plb                 ; DBR = 1
 
-    ldy #0003           ; pointer to map read start
-    sty @column_offset  ; column_offset = 0
-    ldy #0020           ; loop counter
-    ldx #0006           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes
-
     brk 00
 copy_column_loop:
     phy
     rep #20
-    lda !column_offset
+    lda !tilemap_offset
     tay
     clc
     adc @small_map+2
-    sta !column_offset
+    sta !tilemap_offset
     sep #20
 
     lda @small_map+6,y
@@ -164,6 +164,38 @@ copy_column_loop:
     rts
 
 CopyMapRowToTileMapBuffer:
+    ldy #0180           ; pointer to map read start, should be a PARAM
+    sty @tilemap_offset  ; tilemap_offset = 0
+    ldy #0020           ; loop counter
+    ldx #0040           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+
+    phb                 ; save data bank register
+    lda #01
+    pha
+    plb                 ; DBR = 1
+
+    brk 00
+copy_row_loop:
+    phy
+    rep #20
+    lda !tilemap_offset
+    tay
+    inc
+    sta !tilemap_offset
+    sep #20
+
+    lda @small_map+6,y
+    ply
+    sta !tilemap_buffer,x
+    inx
+    lda #00
+    sta !tilemap_buffer,x
+    inx
+
+    dey
+    bne @copy_row_loop
+
+    plb                 ; restore data bank register
     rts
 
 InitTilemapBuffer:
