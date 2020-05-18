@@ -16,8 +16,6 @@ small_map:
 .org 7e0000
 map_offset:
     .rb 2
-tilemap_offset:
-    .rb 2
 tilemap_buffer:
     .rb 800
 
@@ -60,7 +58,7 @@ ResetVector:
     lda #01             ; enable BG1&3
     sta 212c            ; TM
 
-    ;jsr @CopyMapColumnToTileMapBuffer
+    jsr @CopyMapColumnToTileMapBuffer
     jsr @CopyMapRowToTileMapBuffer
     ;jsr @InitTilemapBuffer
 
@@ -127,7 +125,6 @@ CopyMapColumnToTileMapBuffer:
     sty @map_offset
     ldy #0020           ; loop counter
     ldx #07c6           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
-    stx @tilemap_offset
 
     phb                 ; save data bank register
     lda #01
@@ -160,7 +157,6 @@ copy_column_loop:
     tax
 
     ; here wrap at row 0 if necessary
-    sta !tilemap_offset
     lsr
     lsr
     lsr
@@ -169,7 +165,7 @@ copy_column_loop:
     lsr                 ; one additional shift right because tilemap is 2 bytes for one entry
     cmp #0020
     bcc @skip_column_wrap
-    lda !tilemap_offset
+    txa
     and #001f           ; caution: may need to and #003f
     tax
 skip_column_wrap:
