@@ -60,8 +60,8 @@ ResetVector:
     lda #01             ; enable BG1&3
     sta 212c            ; TM
 
-    jsr @CopyMapColumnToTileMapBuffer
-    ;jsr @CopyMapRowToTileMapBuffer
+    ;jsr @CopyMapColumnToTileMapBuffer
+    jsr @CopyMapRowToTileMapBuffer
     ;jsr @InitTilemapBuffer
 
     ; ---- DMA transfers ---
@@ -121,8 +121,7 @@ NmiVector:
 MainLoop:
     jmp @MainLoop
 
-; PARAMS: map read start, map address
-; TODO: need to wrap begining of column if going outside
+; todo: PARAMS: map read start, map address
 CopyMapColumnToTileMapBuffer:
     ldy #0003           ; pointer to map read start, should be a PARAM
     sty @map_offset
@@ -167,11 +166,11 @@ copy_column_loop:
     lsr
     lsr
     lsr
-    lsr
+    lsr                 ; one additional shift right because tilemap is 2 bytes for one entry
     cmp #0020
     bcc @skip_column_wrap
     lda !tilemap_offset
-    and #001f
+    and #001f           ; caution: may need to and #003f
     tax
 skip_column_wrap:
     sep #20
@@ -182,12 +181,11 @@ skip_column_wrap:
     plb                 ; restore data bank register
     rts
 
-; TODO: need to wrap begining of row if going outside
 CopyMapRowToTileMapBuffer:
     ldy #0180           ; pointer to map read start, should be a PARAM
     sty @map_offset  ; map_offset = 0
     ldy #0020           ; loop counter
-    ldx #0042           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    ldx #008c           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
 
     phb                 ; save data bank register
     lda #01
@@ -211,6 +209,17 @@ copy_row_loop:
     lda #00
     sta !tilemap_buffer,x
     inx
+
+    ; here wrap at column  0 if necessary
+    rep #20
+    txa
+    bit #003f
+    bne @skip_row_wrap
+    sec
+    sbc #0040
+    tax
+skip_row_wrap:
+    sep #20
 
     dey
     bne @copy_row_loop
