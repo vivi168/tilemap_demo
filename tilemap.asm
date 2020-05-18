@@ -59,7 +59,13 @@ ResetVector:
     sta 212c            ; TM
 
     jsr @CopyMapColumnToTileMapBuffer
+
+    tsx
+    pea 054d            ; pointer to map read start
+    pea 0000            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
     jsr @CopyMapRowToTileMapBuffer
+    txs
+
     ;jsr @InitTilemapBuffer
 
     ; ---- DMA transfers ---
@@ -177,29 +183,34 @@ skip_column_wrap:
     plb                 ; restore data bank register
     rts
 
+; arg1(@09) = map read start, arg2(@07) = tilemap buffer write start
 CopyMapRowToTileMapBuffer:
-    ldy #0180           ; pointer to map read start, should be a PARAM
-    sty @map_offset  ; map_offset = 0
-    ldy #0020           ; loop counter
-    ldx #008c           ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    phx
+    phd
+    tsc
+    tcd
 
     phb                 ; save data bank register
     lda #01
     pha
-    plb                 ; DBR = 1
+    plb                 ; DBR = 1 (to access small map Y indexed)
 
-    ; brk 00
+    ldy 09
+    phy                 ; save map read start as initial map offset
+    ldx 07              ; load tilemap buffer write start offset
+
+    lda #20             ; loop counter
+    pha
+
 copy_row_loop:
-    phy
     rep #20
-    lda !map_offset
-    tay
-    inc
-    sta !map_offset
+    lda 02,S            ; load current map offset
+    tay                 ; save it as index
+    inc                 ; increment it
+    sta 02,S            ; save it for next iteration
     sep #20
 
     lda @small_map+6,y
-    ply
     sta !tilemap_buffer,x
     inx
     lda #00
@@ -217,10 +228,18 @@ copy_row_loop:
 skip_row_wrap:
     sep #20
 
-    dey
+    pla
+    dec
+    pha
     bne @copy_row_loop
 
+    pla                 ; clean after ourselve
+    ply
     plb                 ; restore data bank register
+
+    pld
+    plx
+
     rts
 
 InitTilemapBuffer:
