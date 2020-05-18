@@ -65,6 +65,18 @@ ResetVector:
     txs
 
     tsx
+    pea 046f            ; pointer to map read start
+    pea 0376            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    jsr @CopyMapColumnToTileMapBuffer
+    txs
+
+    tsx
+    pea 0ccf            ; pointer to map read start
+    pea 0680            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    jsr @CopyMapRowToTileMapBuffer
+    txs
+
+    tsx
     pea 054d            ; pointer to map read start
     pea 06d0            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
     jsr @CopyMapRowToTileMapBuffer
