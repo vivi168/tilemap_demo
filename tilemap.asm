@@ -18,8 +18,6 @@ small_map:
     .incbin assets/big.bin
 
 .org 7e0000
-map_offset:
-    .rb 2
 tilemap_buffer:
     .rb 800
 
@@ -264,6 +262,11 @@ InitTilemapBuffer:
     tsc
     tcd
 
+    phb                 ; save data bank register
+    lda #01
+    pha
+    plb                 ; DBR = 1 (to access small map Y indexed)
+
 init_map_loop:
 
     tsx
@@ -272,7 +275,7 @@ init_map_loop:
     lda 0b              ; pointer to map read start
     pha
     clc
-    adc #0080           ; TODO: here we need map width as a variable
+    adc @small_map+2    ; map width
     sta 0b              ; update for next loop iteration
 
     lda 09              ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
@@ -287,6 +290,8 @@ init_map_loop:
 
     dec 01
     bne @init_map_loop
+
+    plb
 
     pla                 ; clean up after ourselve
     plp
