@@ -15,11 +15,31 @@ tileset:
 tileset_palette:
     .incbin assets/tileset-pal.bin
 small_map:
+big_map:
     .incbin assets/big.bin
 
 .org 7e0000
+joy1_raw:
+    .rb 2
+joy1_press:
+    .rb 2
+joy1_held:
+    .rb 2
+x_velocity:
+    .rb 1
+y_velocity:
+    .rb 1
+bg_x_scroll:
+    .rb 1
+bg_y_scroll:
+    .rb 1
+
 tilemap_buffer:
     .rb 800
+current_map:            ; pointer to current map (map should always be in same bank)
+    .rb 2
+current_map_width:      ; width of current map
+    .rb 2
 
 .org 008000
 .base 0000
@@ -47,9 +67,9 @@ ResetVector:
     sta 210d
     lda #00             ; second write = upper 2 bits
     sta 210d            ; horizontal scroll
-    lda #ff
+    lda #00
     sta 210e
-    lda #03
+    lda #00
     sta 210e            ; vertical scroll. caution, offset by -1
 
     lda #10             ; BG1 MAP @ VRAM[2000]
@@ -125,15 +145,100 @@ BreakVector:
     rti
 
 NmiVector:
+    php
+    rep #30
     pha
+    phx
+    phy
+
+    sep #20
+    rep #10
 
     lda 4210            ; RDNMI
 
+    jsr @ReadJoyPad1
+
+    lda @bg_x_scroll
+    sta 210d
+    lda #00
+    sta 210d
+
+    lda @bg_y_scroll
+    sta 210e
+    lda #00
+    sta 210e
+
+    rep #30
+    ply
+    plx
     pla
+    plp
     rti
 
 MainLoop:
+    wai
+
+    jsr @HandleInput
+    jsr @UpdateBGScroll
+
     jmp @MainLoop
+
+
+HandleInput:
+    lda @joy1_held+1
+
+    bit #08
+    bne @move_up
+
+    bit #04
+    bne @move_down
+
+    bit #02
+    bne @move_left
+
+    bit #01
+    bne @move_right
+
+    stz @x_velocity
+    stz @y_velocity
+    rts
+
+move_up:
+    lda #ff
+    sta @y_velocity
+    stz @x_velocity
+    rts
+
+move_down:
+    lda #01
+    sta @y_velocity
+    stz @x_velocity
+    rts
+
+move_left:
+    lda #ff
+    sta @x_velocity
+    stz @y_velocity
+    rts
+
+move_right:
+    lda #01
+    sta @x_velocity
+    stz @y_velocity
+    rts
+
+UpdateBGScroll:
+    lda @bg_x_scroll
+    clc
+    adc @x_velocity
+    sta @bg_x_scroll
+
+    lda @bg_y_scroll
+    clc
+    adc @y_velocity
+    sta @bg_y_scroll
+
+    rts
 
 ; arg1(@0a) = map read start, arg2(@08) = tilemap buffer write start
 CopyMapColumnToTileMapBuffer:
@@ -360,6 +465,29 @@ CgramDmaTransfer:
     plx
     rts
 
+ReadJoyPad1:
+    php
+read_joy1_data:
+    lda 4212            ; read joypad status (HVBJOY)
+    and #01
+    bne @read_joy1_data ; read done when 0
+
+    rep #30             ; m16, x16
+
+    ldx @joy1_raw       ; read previous frame raw input
+    lda 4218            ; read current frame raw input (JOY1L)
+    sta @joy1_raw       ; save it
+    txa                 ; move previous frame raw input to A
+    eor @joy1_raw       ; XOR previous with current, get changes. Held and unpressed become 0
+    and @joy1_raw       ; AND previous with current, only pressed left to 1
+    sta @joy1_press     ; store pressed
+    txa                 ; move previous frame raw input to A
+    and @joy1_raw       ; AND with current, only held are left to 1
+    sta @joy1_held      ; stored held
+
+    plp
+    rts
+
 ClearRegisters:
     stz 2101
     stz 2102
@@ -450,6 +578,13 @@ ClearRegisters:
     stz 420c
     lda #01
     sta 420d
+
+    ; ---- custom registers
+
+    stz @bg_x_scroll
+    stz @bg_y_scroll
+    stz @x_velocity
+    stz @y_velocity
 
     rts
 
