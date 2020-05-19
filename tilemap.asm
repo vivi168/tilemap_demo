@@ -29,10 +29,14 @@ x_velocity:
     .rb 1
 y_velocity:
     .rb 1
-bg_x_scroll:
+screen_tm_x:            ; screen position relative to tilemap
     .rb 1
-bg_y_scroll:
+screen_tm_y:
     .rb 1
+screen_m_x:             ; screen position relative to map
+    .rb 2
+screen_m_y:
+    .rb 2
 
 tilemap_buffer:
     .rb 800
@@ -158,12 +162,12 @@ NmiVector:
 
     jsr @ReadJoyPad1
 
-    lda @bg_x_scroll
+    lda @screen_tm_x
     sta 210d
     lda #00
     sta 210d
 
-    lda @bg_y_scroll
+    lda @screen_tm_y
     sta 210e
     lda #00
     sta 210e
@@ -228,15 +232,31 @@ move_right:
     rts
 
 UpdateBGScroll:
-    lda @bg_x_scroll
+    lda @screen_tm_x
+    pha                 ; save previous value
     clc
     adc @x_velocity
-    sta @bg_x_scroll
+    sta @screen_tm_x    ; store new value
 
-    lda @bg_y_scroll
+    bit #07
+    bne @skip_column_update
+    ; here check if need to copy new column (if new x % 8 == 0)
+
+skip_column_update:
+    pla
+
+    lda @screen_tm_y
+    pha
     clc
     adc @y_velocity
-    sta @bg_y_scroll
+    sta @screen_tm_y
+
+    bit #07
+    bne @skip_row_update
+    ; here check if need to copy new row (if new y % 8 == 0)
+
+skip_row_update:
+    pla
 
     rts
 
@@ -581,8 +601,8 @@ ClearRegisters:
 
     ; ---- custom registers
 
-    stz @bg_x_scroll
-    stz @bg_y_scroll
+    stz @screen_tm_x
+    stz @screen_tm_y
     stz @x_velocity
     stz @y_velocity
 
