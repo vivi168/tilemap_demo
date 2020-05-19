@@ -266,31 +266,29 @@ InitTilemapBuffer:
 
 init_map_loop:
 
+    tsx
+
     rep #20
     lda 0b              ; pointer to map read start
     pha
+    clc
+    adc #0080           ; TODO: here we need map width as a variable
+    sta 0b              ; update for next loop iteration
+
     lda 09              ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
     pha
+    clc
+    adc #0040           ; tilemap are multiple of 2s
+    sta 09              ; update for next loop iteration
     sep #20
 
     jsr @CopyMapRowToTileMapBuffer
-
-    rep #20
-    pla
-    clc
-    adc #0040           ; tilemap are multiple of 2s
-    sta 09
-
-    pla
-    clc
-    adc #0080           ; TODO: here we need map width as a variable
-    sta 0b
-    sep #20
+    txs
 
     dec 01
     bne @init_map_loop
 
-    pla
+    pla                 ; clean up after ourselve
     plp
     pld
     plx
