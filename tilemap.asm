@@ -67,11 +67,12 @@ ResetVector:
     lda #01
     sta 2105            ; BGMODE 1
 
-    lda #00             ; first write = lower byte
+    lda @screen_tm_x    ; first write = lower byte
     sta 210d
     lda #00             ; second write = upper 2 bits
     sta 210d            ; horizontal scroll
-    lda #00
+    lda @screen_tm_y
+    dec
     sta 210e
     lda #00
     sta 210e            ; vertical scroll. caution, offset by -1
@@ -168,6 +169,7 @@ NmiVector:
     sta 210d
 
     lda @screen_tm_y
+    dec                 ; Y scroll is offset by -1 (hardware quirk)
     sta 210e
     lda #00
     sta 210e
