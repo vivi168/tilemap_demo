@@ -1,5 +1,9 @@
 ;**************************************
 ; TileMap Demo
+;
+; tilemap format
+; tile number lowest 8 bits
+; vert flip | hori flip | prio bit | pal no H | pal no M | pal no L | tile number 10th bit | tile number 9th bith
 ;**************************************
 .65816
 
@@ -65,24 +69,16 @@ ResetVector:
     txs
 
     tsx
-    pea 046f            ; pointer to map read start
-    pea 0376            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
-    jsr @CopyMapColumnToTileMapBuffer
-    txs
-
-    tsx
     pea 0ccf            ; pointer to map read start
     pea 0680            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
     jsr @CopyMapRowToTileMapBuffer
     txs
 
     tsx
-    pea 054d            ; pointer to map read start
-    pea 06d0            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
-    jsr @CopyMapRowToTileMapBuffer
+    pea 054d
+    pea 0000
+    jsr @InitTilemapBuffer
     txs
-
-    ;jsr @InitTilemapBuffer
 
     ; ---- DMA transfers ---
     ; Copy tilemap buffer to VRAM
@@ -256,60 +252,49 @@ skip_row_wrap:
 
     rts
 
+; arg1(@0b) = map read start, arg2(@09) = tilemap buffer write start
 InitTilemapBuffer:
-;**************************************
-; tilemap format
-; tile number lowest 8 bits
-; vert flip | hori flip | prio bit | pal no H | pal no M | pal no L | tile number 10th bit | tile number 9th bith
-;**************************************
-    ldy #0000           ; pointer to map read start
-    ldx #0000           ; pointer to tilemap write start
-    stx @map_offset ; map_offset = 0
+    phx
+    phd
+    php
 
-    phb                 ; save data bank register
-    lda #01
+    lda #20             ; loop counter
     pha
-    plb                 ; DBR = 1
 
-tilemap_loop:
+    tsc
+    tcd
+
+init_map_loop:
 
     rep #20
-    phy
-    tya
-    beq @continue_loop
-    dec
-    eor 01,s
-    and #0020
-    beq @add_offset
-    lda !map_offset
-    clc
-    adc @small_map+2
-    sec
-    sbc #0020
-    sta !map_offset
-
-add_offset:
-    tya
-    clc
-    adc !map_offset
-    tay
-
-continue_loop:
+    lda 0b              ; pointer to map read start
+    pha
+    lda 09              ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    pha
     sep #20
 
-    lda @small_map+6,y  ; +6: account for map size + width/height header
-    ply
-    sta !tilemap_buffer,x
-    inx
-    lda #00
-    sta !tilemap_buffer,x
-    inx
+    jsr @CopyMapRowToTileMapBuffer
 
-    iny
-    cpy #400            ; copy one full tilemap (32x32 tiles)
-    bne @tilemap_loop
+    rep #20
+    pla
+    clc
+    adc #0040           ; tilemap are multiple of 2s
+    sta 09
 
-    plb                 ; restore data bank register
+    pla
+    clc
+    adc #0080           ; TODO: here we need map width as a variable
+    sta 0b
+    sep #20
+
+    dec 01
+    bne @init_map_loop
+
+    pla
+    plp
+    pld
+    plx
+
     rts
 
 VramDmaTransfer:
