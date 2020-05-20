@@ -402,16 +402,10 @@ InitTilemapBuffer:
     php
 
     lda #20             ; loop counter
-    pha
+    pha                 ; reserve as local variable
 
     tsc
     tcd
-
-    phb                 ; save data bank register
-    lda #01
-    pha
-    plb                 ; DBR = 1 (to access small map Y indexed)
-
 init_map_loop:
 
     tsx
@@ -420,7 +414,7 @@ init_map_loop:
     lda 0b              ; pointer to map read start
     pha
     clc
-    adc @small_map+2    ; map width
+    adc !current_map_width
     sta 0b              ; update for next loop iteration
 
     lda 09              ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
@@ -435,8 +429,6 @@ init_map_loop:
 
     dec 01
     bne @init_map_loop
-
-    plb
 
     pla                 ; clean up after ourselve
     plp
