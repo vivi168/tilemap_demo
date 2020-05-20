@@ -88,13 +88,15 @@ ResetVector:
     sta 212c            ; TM
 
     ; --- some initialization
-    ldx #@small_map+2
-    stx @current_map_width
-    ldx #@small_map+4
-    stx @current_map_height
-    lda #^small_map+6
+    rep #20
+    lda !small_map+2
+    sta @current_map_width
+    lda !small_map+4
+    sta @current_map_height
+    sep #20
     ldx #@small_map+6
     stx @current_map
+    lda #^small_map+6
     sta @current_map+2
     ; ---
 
@@ -280,22 +282,26 @@ CopyMapColumnToTileMapBuffer:
     phx
     phd
 
-    lda #20
-    pha                 ; reserve loop counter on stack
-
     tsc
+    dec
+    dec
+    dec
+    dec                 ; reserve 4 bytes for local variable
     tcd
 
-    phb                 ; save data bank register
-    lda #01
-    pha
-    plb                 ; DBR = 1
+    lda #20
+    sta 01              ; loop counter
 
-    ldy 0a              ; pointer to map read start, should be a PARAM
-    ldx 08              ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    ldx @current_map    ; current map page
+    stx 02
+    lda @current_map+2  ; current map bank
+    sta 04
+
+    ldy 0d              ; pointer to map read start, should be a PARAM
+    ldx 0b              ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
 
 copy_column_loop:
-    lda @small_map+6,y
+    lda [02],y
     sta !tilemap_buffer,x
     inx
     lda #00
@@ -306,7 +312,7 @@ copy_column_loop:
     ; next map entry
     tya
     clc
-    adc @small_map+2
+    adc !current_map_width
     tay
 
     ; next tilemap entry
@@ -332,9 +338,6 @@ skip_column_wrap:
     dec 01
     bne @copy_column_loop
 
-    plb                 ; restore data bank register
-
-    pla
     pld
     plx
 
