@@ -282,20 +282,16 @@ CopyMapColumnToTileMapBuffer:
     phx
     phd
 
-    tsc
-    dec
-    dec
-    dec
-    dec                 ; reserve 4 bytes for local variable
-    tcd
-
+    ; --- reserve local variables on the stack
+    lda @current_map+2
+    pha
+    ldx @current_map
+    phx
     lda #20
-    sta 01              ; loop counter
+    pha                 ; loop counter
 
-    ldx @current_map    ; current map page
-    stx 02
-    lda @current_map+2  ; current map bank
-    sta 04
+    tsc
+    tcd
 
     ldy 0d              ; pointer to map read start, should be a PARAM
     ldx 0b              ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
@@ -338,6 +334,9 @@ skip_column_wrap:
     dec 01
     bne @copy_column_loop
 
+    plx
+    pla
+    pla
     pld
     plx
 
@@ -348,20 +347,16 @@ CopyMapRowToTileMapBuffer:
     phx
     phd
 
-    tsc
-    dec
-    dec
-    dec
-    dec                 ; reserve 4 bytes for local variable
-    tcd                 ; create a local frame
-
+    ; --- reserve local variables on the stack
+    lda @current_map+2
+    pha
+    ldx @current_map
+    phx
     lda #20
-    sta 01              ; loop counter
+    pha                 ; loop counter
 
-    ldx @current_map    ; current map page
-    stx 02
-    lda @current_map+2  ; current map bank
-    sta 04
+    tsc
+    tcd                 ; create a local frame
 
     ldy 0d              ; map read start initial map offset
     ldx 0b              ; load tilemap buffer write start offset
@@ -390,6 +385,9 @@ skip_row_wrap:
     dec 01
     bne @copy_row_loop
 
+    plx                 ; clean up after ourselve
+    pla
+    pla
     pld
     plx
 
