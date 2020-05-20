@@ -38,12 +38,14 @@ screen_m_x:             ; screen position relative to map
 screen_m_y:
     .rb 2
 
-tilemap_buffer:
-    .rb 800
 current_map:            ; pointer to current map (map should always be in same bank)
-    .rb 2
+    .rb 3
 current_map_width:      ; width of current map
     .rb 2
+current_map_height:
+    .rb 2
+tilemap_buffer:
+    .rb 800
 
 .org 008000
 .base 0000
@@ -84,6 +86,17 @@ ResetVector:
 
     lda #01             ; enable BG1&3
     sta 212c            ; TM
+
+    ; --- some initialization
+    ldx #@small_map+2
+    stx @current_map_width
+    ldx #@small_map+4
+    stx @current_map_height
+    lda #^small_map+6
+    ldx #@small_map+6
+    stx @current_map
+    sta @current_map+2
+    ; ---
 
     tsx
     pea 046e            ; pointer to map read start
@@ -327,27 +340,31 @@ skip_column_wrap:
 
     rts
 
-; arg1(@0a) = map read start, arg2(@08) = tilemap buffer write start
+; arg1(@0d) = map read start, arg2(@0b) = tilemap buffer write start
 CopyMapRowToTileMapBuffer:
     phx
     phd
 
-    lda #20             ; loop counter
-    pha
-
     tsc
+    dec
+    dec
+    dec
+    dec                 ; reserve 4 bytes for local variable
     tcd                 ; create a local frame
 
-    phb                 ; save data bank register
-    lda #01
-    pha
-    plb                 ; DBR = 1 (to access small map Y indexed)
+    lda #20
+    sta 01              ; loop counter
 
-    ldy 0a              ; map read start initial map offset
-    ldx 08              ; load tilemap buffer write start offset
+    ldx @current_map    ; current map page
+    stx 02
+    lda @current_map+2  ; current map bank
+    sta 04
+
+    ldy 0d              ; map read start initial map offset
+    ldx 0b              ; load tilemap buffer write start offset
 
 copy_row_loop:
-    lda @small_map+6,y
+    lda [02],y
     iny
     sta !tilemap_buffer,x
     inx
@@ -363,15 +380,13 @@ copy_row_loop:
     sec
     sbc #0040
     tax
+
 skip_row_wrap:
     sep #20
 
     dec 01
     bne @copy_row_loop
 
-    plb                 ; restore data bank register
-
-    pla
     pld
     plx
 
