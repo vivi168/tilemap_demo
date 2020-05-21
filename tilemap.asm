@@ -25,9 +25,9 @@ joy1_press:
     .rb 2
 joy1_held:
     .rb 2
-x_velocity:
+screen_x_velocity:
     .rb 2
-y_velocity:
+screen_y_velocity:
     .rb 2
 screen_tm_x:            ; screen position relative to tilemap
     .rb 1
@@ -234,32 +234,32 @@ HandleInput:
     bit #0100
     bne @move_right
 
-    stz @x_velocity
-    stz @y_velocity
+    stz @screen_x_velocity
+    stz @screen_y_velocity
     bra @exit_handle_input
 
 move_up:
     lda #ffff           ; negative velocity
-    sta @y_velocity
-    stz @x_velocity
+    sta @screen_y_velocity
+    stz @screen_x_velocity
     bra @exit_handle_input
 
 move_down:
     lda #0001           ; positive velocity
-    sta @y_velocity
-    stz @x_velocity
+    sta @screen_y_velocity
+    stz @screen_x_velocity
     bra @exit_handle_input
 
 move_left:
     lda #ffff
-    sta @x_velocity
-    stz @y_velocity
+    sta @screen_x_velocity
+    stz @screen_y_velocity
     bra @exit_handle_input
 
 move_right:
     lda #0001
-    sta @x_velocity
-    stz @y_velocity
+    sta @screen_x_velocity
+    stz @screen_y_velocity
 
 exit_handle_input:
     sep #20
@@ -271,7 +271,7 @@ UpdateBGScroll:
     lda @screen_m_x
     pha                 ; save initial value
     clc
-    adc @x_velocity
+    adc @screen_x_velocity
     sta @screen_m_x
     pha                 ; save new value
 
@@ -294,7 +294,7 @@ continue_horizontal_scrolling:
     lda @screen_tm_x
     pha                 ; save previous value
     clc
-    adc @x_velocity
+    adc @screen_x_velocity
     sta @screen_tm_x    ; store new value
 
     bit #07
@@ -317,7 +317,7 @@ check_vertical_scrolling:
     lda @screen_m_y
     pha                 ; save initial value
     clc
-    adc @y_velocity
+    adc @screen_y_velocity
     sta @screen_m_y
     pha                 ; save new value
 
@@ -340,7 +340,7 @@ continue_vertical_scrolling:
     lda @screen_tm_y
     pha
     clc
-    adc @y_velocity
+    adc @screen_y_velocity
     sta @screen_tm_y
 
     bit #07
@@ -700,8 +700,8 @@ ClearRegisters:
     rep #20
     stz @screen_m_x
     stz @screen_m_y
-    stz @x_velocity
-    stz @y_velocity
+    stz @screen_x_velocity
+    stz @screen_y_velocity
     sep #20
 
 
