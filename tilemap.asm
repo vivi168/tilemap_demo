@@ -26,9 +26,9 @@ joy1_press:
 joy1_held:
     .rb 2
 x_velocity:
-    .rb 1
+    .rb 2
 y_velocity:
-    .rb 1
+    .rb 2
 screen_tm_x:            ; screen position relative to tilemap
     .rb 1
 screen_tm_y:
@@ -40,9 +40,13 @@ screen_m_y:
 
 current_map:            ; pointer to current map (map should always be in same bank)
     .rb 3
-current_map_width:      ; width of current map
+current_map_width:      ; width of current map (in tiles)
     .rb 2
-current_map_height:
+current_map_height:     ; height of current map (in tiles)
+    .rb 2
+current_map_width_pixel:
+    .rb 2
+current_map_height_pixel:
     .rb 2
 tilemap_buffer:
     .rb 800
@@ -91,8 +95,16 @@ ResetVector:
     rep #20
     lda !small_map+2
     sta @current_map_width
+    asl
+    asl
+    asl
+    sta @current_map_width_pixel
     lda !small_map+4
     sta @current_map_height
+    asl
+    asl
+    asl
+    sta @current_map_height_pixel
     sep #20
     ldx #@small_map+6
     stx @current_map
@@ -206,49 +218,62 @@ MainLoop:
 
 
 HandleInput:
-    lda @joy1_held+1
+    rep #20
 
-    bit #08
+    lda @joy1_held
+
+    bit #0800
     bne @move_up
 
-    bit #04
+    bit #0400
     bne @move_down
 
-    bit #02
+    bit #0200
     bne @move_left
 
-    bit #01
+    bit #0100
     bne @move_right
 
     stz @x_velocity
     stz @y_velocity
-    rts
+    bra @exit_handle_input
 
 move_up:
-    lda #ff
+    lda #ffff           ; negative velocity
     sta @y_velocity
     stz @x_velocity
-    rts
+    bra @exit_handle_input
 
 move_down:
-    lda #01
+    lda #0001           ; positive velocity
     sta @y_velocity
     stz @x_velocity
-    rts
+    bra @exit_handle_input
 
 move_left:
-    lda #ff
+    lda #ffff
     sta @x_velocity
     stz @y_velocity
-    rts
+    bra @exit_handle_input
 
 move_right:
-    lda #01
+    lda #0001
     sta @x_velocity
     stz @y_velocity
+
+exit_handle_input:
+    sep #20
     rts
 
 UpdateBGScroll:
+    rep #20
+    ; here first check if can scroll horizontally
+    lda @screen_m_x
+    clc
+    adc @x_velocity
+    sta @screen_m_x
+    sep #20
+
     lda @screen_tm_x
     pha                 ; save previous value
     clc
@@ -261,6 +286,19 @@ UpdateBGScroll:
 
 skip_column_update:
     pla
+    bra @check_vertical_scrolling
+
+skip_horizontal_scrolling:
+
+
+check_vertical_scrolling:
+    rep #20
+    ; here first check if can scroll vertically
+    lda @screen_m_y
+    clc
+    adc @y_velocity
+    sta @screen_m_y
+    sep #20
 
     lda @screen_tm_y
     pha
@@ -275,6 +313,7 @@ skip_column_update:
 skip_row_update:
     pla
 
+skip_vertical_scrolling:
     rts
 
 ; arg1(@0a) = map read start, arg2(@08) = tilemap buffer write start
@@ -613,8 +652,13 @@ ClearRegisters:
 
     stz @screen_tm_x
     stz @screen_tm_y
+    rep #20
+    stz @screen_m_x
+    stz @screen_m_y
     stz @x_velocity
     stz @y_velocity
+    sep #20
+
 
     rts
 
