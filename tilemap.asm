@@ -497,6 +497,10 @@ MapIndexFromScreenCoords:
     lsr
     lsr
     lsr
+
+    cpy #0008
+    bcc @skip_m_y_calculation
+
     pha ; p2
 
     lsr 01
@@ -514,6 +518,7 @@ mult_y:
     clc
     adc 01
 
+skip_m_y_calculation:
     ply ; p1
 
     tay
