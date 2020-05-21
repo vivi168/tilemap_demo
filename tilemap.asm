@@ -288,9 +288,9 @@ continue_horizontal_scrolling:
     pla
     sta @screen_m_x     ; restore new value
     pla
-
     sep #20
 
+    ; --- update tilemap relative x coordinates
     lda @screen_tm_x
     pha                 ; save previous value
     clc
@@ -312,13 +312,31 @@ skip_horizontal_scrolling:
     sta @screen_m_x     ; restore initial value
 
 check_vertical_scrolling:
+    rep #20
     ; here first check if can scroll vertically
     lda @screen_m_y
+    pha                 ; save initial value
     clc
     adc @y_velocity
     sta @screen_m_y
+    pha                 ; save new value
+
+    cmp #0000
+    bmi @skip_vertical_scrolling
+
+    clc
+    adc #00e0           ; add screen height
+    cmp @current_map_height_pixel
+    beq @continue_vertical_scrolling
+    bcs @skip_vertical_scrolling
+
+continue_vertical_scrolling:
+    pla
+    sta @screen_m_y     ; restore new value
+    pla
     sep #20
 
+    ; --- update tilemap relative y coordinates
     lda @screen_tm_y
     pha
     clc
@@ -331,8 +349,16 @@ check_vertical_scrolling:
 
 skip_row_update:
     pla
+    bra @exit_bg_scrolling
 
 skip_vertical_scrolling:
+    rep #20
+    pla
+    pla
+    sta @screen_m_y     ; restore initial value
+    sep #20
+
+exit_bg_scrolling:
     rts
 
 ; arg1(@0a) = map read start, arg2(@08) = tilemap buffer write start
