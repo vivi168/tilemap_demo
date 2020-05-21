@@ -269,9 +269,26 @@ UpdateBGScroll:
     rep #20
     ; here first check if can scroll horizontally
     lda @screen_m_x
+    pha                 ; save initial value
     clc
     adc @x_velocity
     sta @screen_m_x
+    pha                 ; save new value
+
+    cmp #0000
+    bmi @skip_horizontal_scrolling
+
+    clc
+    adc #0100           ; add screen width
+    cmp @current_map_width_pixel
+    beq @continue_horizontal_scrolling
+    bcs @skip_horizontal_scrolling
+
+continue_horizontal_scrolling:
+    pla
+    sta @screen_m_x     ; restore new value
+    pla
+
     sep #20
 
     lda @screen_tm_x
@@ -289,10 +306,12 @@ skip_column_update:
     bra @check_vertical_scrolling
 
 skip_horizontal_scrolling:
-
+    rep #20
+    pla
+    pla
+    sta @screen_m_x     ; restore initial value
 
 check_vertical_scrolling:
-    rep #20
     ; here first check if can scroll vertically
     lda @screen_m_y
     clc
