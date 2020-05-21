@@ -509,10 +509,10 @@ MapIndexFromScreenCoords:
 
     lda @current_map_width
     lsr
-mult_y:
+mult_y_by_map_w:
     asl 01
     lsr
-    bne @mult_y
+    bne @mult_y_by_map_w
 
     pla ; p2
     clc
