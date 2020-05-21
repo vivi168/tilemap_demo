@@ -304,6 +304,7 @@ continue_horizontal_scrolling:
     bcc @update_column_before
     ; update column ahead here
     jsr @TilemapIndexFromScreenCoords
+    jsr @MapIndexFromScreenCoords
 
 update_column_before:
     ; update column before here
@@ -475,6 +476,49 @@ exit_tm_index:
     asl                 ; x2 because tilemap entries are 2 bytes long
     tax                 ; save index in x
 
+    plp
+    rts
+
+; result in Y
+MapIndexFromScreenCoords:
+    php
+    phd
+
+    brk 00
+
+    ldy @screen_m_y
+    phy ; p1
+
+    tsc
+    tcd
+
+    rep #30
+    lda @screen_m_x
+    lsr
+    lsr
+    lsr
+    pha ; p2
+
+    lsr 01
+    lsr 01
+    lsr 01
+
+    lda @current_map_width
+    lsr
+mult_y:
+    asl 01
+    lsr
+    bne @mult_y
+
+    pla ; p2
+    clc
+    adc 01
+
+    ply ; p1
+
+    tay
+
+    pld
     plp
     rts
 
