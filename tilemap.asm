@@ -112,20 +112,20 @@ ResetVector:
     sta @current_map+2
     ; ---
 
-    tsx
-    pea 046e            ; pointer to map read start
-    pea 0374            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
-    jsr @CopyMapColumnToTileMapBuffer
-    txs
+    ;tsx
+    ;pea 046e            ; pointer to map read start
+    ;pea 0374            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    ;jsr @CopyMapColumnToTileMapBuffer
+    ;txs
+
+    ;tsx
+    ;pea 0ccf            ; pointer to map read start
+    ;pea 0680            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
+    ;jsr @CopyMapRowToTileMapBuffer
+    ;txs
 
     tsx
-    pea 0ccf            ; pointer to map read start
-    pea 0680            ; pointer to tilemap write start. multiple of 2 because tile is 2 bytes. should be determined by screen TM position
-    jsr @CopyMapRowToTileMapBuffer
-    txs
-
-    tsx
-    pea 054d
+    pea 0000
     pea 0000
     jsr @InitTilemapBuffer
     txs
@@ -299,7 +299,15 @@ continue_horizontal_scrolling:
 
     bit #07
     bne @skip_column_update
-    ; here check if need to copy new column (if new x % 8 == 0)
+    ; here copy new column (new x % 8 == 0)
+    cmp 01,s
+    bcc @update_column_before
+    ; update column ahead here
+    jsr @TilemapIndexFromScreenCoords
+
+update_column_before:
+    ; update column before here
+
 
 skip_column_update:
     pla
@@ -424,6 +432,50 @@ skip_column_wrap:
     pld
     plx
 
+    rts
+
+; result in X
+TilemapIndexFromScreenCoords:
+    php
+
+    sep #20
+    lda @screen_tm_x
+    lsr
+    lsr
+    lsr                 ; x //= 8
+    rep #20
+    and #00ff
+    pha
+
+    sep #20
+    lda @screen_tm_y
+    cmp #08
+    bcc @skip_tm_y_calculation      ; no need to do complex math on y < 8 (index 0)
+
+    lsr
+    lsr
+    lsr                 ; y //= 8
+    rep #20
+    and #00ff
+    asl
+    asl
+    asl
+    asl
+    asl                 ; y *= screen_w (32)
+    clc
+    adc 01,s
+    plx
+    bra @exit_tm_index
+
+skip_tm_y_calculation:
+    rep #20
+    pla
+
+exit_tm_index:
+    asl                 ; x2 because tilemap entries are 2 bytes long
+    tax                 ; save index in x
+
+    plp
     rts
 
 ; arg1(@0d) = map read start, arg2(@0b) = tilemap buffer write start
