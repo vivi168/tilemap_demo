@@ -279,7 +279,7 @@ exit_handle_input:
     rts
 
 UpdateBGScroll:
-
+    php
     rep #20
     ldx @screen_x_velocity
     beq @check_vertical_scrolling
@@ -361,6 +361,9 @@ skip_horizontal_scrolling:
 
 check_vertical_scrolling:
     rep #20
+    ldx @screen_y_velocity
+    beq @exit_bg_scrolling
+
     ; here first check if can scroll vertically
     lda @screen_m_y
     pha                 ; save initial value
@@ -394,6 +397,42 @@ continue_vertical_scrolling:
     ;bit #07
     ;bne @skip_row_update
     ; here check if need to copy new row (if new y % 8 == 0)
+    cmp 01,s
+    bcc @update_row_before
+
+    lda @screen_tm_y
+    pha
+    clc
+    adc #e0
+    sta @screen_tm_y
+    jsr @TilemapIndexFromScreenCoords
+    pla
+    sta @screen_tm_y
+
+    ; here we need to update Y first before calling method
+    rep #20
+    lda @screen_m_y
+    pha
+    clc
+    adc #00e0
+    sta @screen_m_y
+    jsr @MapIndexFromScreenCoords
+    pla
+    sta @screen_m_y
+    sep #20
+    bra @issou2
+
+update_row_before:
+    jsr @TilemapIndexFromScreenCoords   ; result in X
+    jsr @MapIndexFromScreenCoords       ; result in Y
+
+issou2:
+    phy
+    phx
+    jsr @CopyMapRowToTileMapBuffer
+    plx
+    ply
+
 
 skip_row_update:
     pla
@@ -404,9 +443,11 @@ skip_vertical_scrolling:
     pla
     pla
     sta @screen_m_y     ; restore initial value
-    sep #20
+
 
 exit_bg_scrolling:
+
+    plp
     rts
 
 ; arg1(@0a) = map read start, arg2(@08) = tilemap buffer write start
