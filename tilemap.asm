@@ -262,25 +262,25 @@ HandleInput:
     bra @exit_handle_input
 
 move_up:
-    lda #ffff           ; negative velocity
+    lda #fffe           ; negative velocity
     sta @screen_y_velocity
     stz @screen_x_velocity
     bra @exit_handle_input
 
 move_down:
-    lda #0001           ; positive velocity
+    lda #0002           ; positive velocity
     sta @screen_y_velocity
     stz @screen_x_velocity
     bra @exit_handle_input
 
 move_left:
-    lda #ffff
+    lda #fffe
     sta @screen_x_velocity
     stz @screen_y_velocity
     bra @exit_handle_input
 
 move_right:
-    lda #0001
+    lda #0002
     sta @screen_x_velocity
     stz @screen_y_velocity
 
