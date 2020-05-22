@@ -91,6 +91,16 @@ ResetVector:
     lda #01             ; enable BG1&3
     sta 212c            ; TM
 
+    ; windowing settings
+    lda #03
+    sta 2123
+    lda #08
+    sta 2126
+    lda #f7
+    sta 2127
+    lda #01
+    sta 212e
+
     ; --- some initialization
     rep #20
     lda !small_map+2
