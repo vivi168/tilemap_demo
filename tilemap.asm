@@ -124,8 +124,11 @@ ResetVector:
     ;jsr @CopyMapRowToTileMapBuffer
     ;txs
 
+    ldx #0300
+    stx @screen_m_x
+
     tsx
-    pea 0000
+    pea 0060
     pea 0000
     jsr @InitTilemapBuffer
     txs
@@ -200,6 +203,16 @@ NmiVector:
     sta 210e
     lda #00
     sta 210e
+
+    ; Copy tilemap buffer to VRAM
+    tsx                 ; save stack pointer
+    pea 1000            ; vram dest addr (@2000 really, word steps)
+    pea @tilemap_buffer
+    lda #^tilemap_buffer
+    pha
+    pea 0800            ; nb of bytes to transfer
+    jsr @VramDmaTransfer
+    txs                 ; restore stack pointer
 
     rep #30
     ply
@@ -303,12 +316,24 @@ continue_horizontal_scrolling:
     cmp 01,s
     bcc @update_column_before
     ; update column ahead here
+
+    ; TODO! here we need to update X first before calling method
     jsr @TilemapIndexFromScreenCoords
     jsr @MapIndexFromScreenCoords
 
+    bra @issou
+
 update_column_before:
     ; update column before here
+    jsr @TilemapIndexFromScreenCoords   ; result in X
+    jsr @MapIndexFromScreenCoords       ; result in Y
 
+issou:
+    phy
+    phx
+    jsr @CopyMapColumnToTileMapBuffer
+    plx
+    ply
 
 skip_column_update:
     pla
@@ -492,7 +517,7 @@ MapIndexFromScreenCoords:
     tsc
     tcd
 
-    rep #30
+    rep #20
     lda @screen_m_x
     lsr
     lsr
