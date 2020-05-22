@@ -124,11 +124,11 @@ ResetVector:
     ;jsr @CopyMapRowToTileMapBuffer
     ;txs
 
-    ldx #0300
-    stx @screen_m_x
+    ;ldx #0300
+    ;stx @screen_m_x
 
     tsx
-    pea 0060
+    pea 0000
     pea 0000
     jsr @InitTilemapBuffer
     txs
@@ -279,7 +279,12 @@ exit_handle_input:
     rts
 
 UpdateBGScroll:
+
     rep #20
+    ldx @screen_x_velocity
+    beq @check_vertical_scrolling
+
+
     ; here first check if can scroll horizontally
     lda @screen_m_x
     pha                 ; save initial value
@@ -310,17 +315,26 @@ continue_horizontal_scrolling:
     adc @screen_x_velocity
     sta @screen_tm_x    ; store new value
 
-    bit #07
-    bne @skip_column_update
+    ; bit #07
+    ; bne @skip_column_update
     ; here copy new column (new x % 8 == 0)
     cmp 01,s
     bcc @update_column_before
     ; update column ahead here
 
-    ; TODO! here we need to update X first before calling method
     jsr @TilemapIndexFromScreenCoords
-    jsr @MapIndexFromScreenCoords
 
+    ; here we need to update X first before calling method
+    rep #20
+    lda @screen_m_x
+    pha
+    clc
+    adc #0100
+    sta @screen_m_x
+    jsr @MapIndexFromScreenCoords
+    pla
+    sta @screen_m_x
+    sep #20
     bra @issou
 
 update_column_before:
@@ -377,8 +391,8 @@ continue_vertical_scrolling:
     adc @screen_y_velocity
     sta @screen_tm_y
 
-    bit #07
-    bne @skip_row_update
+    ;bit #07
+    ;bne @skip_row_update
     ; here check if need to copy new row (if new y % 8 == 0)
 
 skip_row_update:
@@ -508,8 +522,6 @@ exit_tm_index:
 MapIndexFromScreenCoords:
     php
     phd
-
-    brk 00
 
     ldy @screen_m_y
     phy ; p1
