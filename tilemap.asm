@@ -133,14 +133,14 @@ ResetVector:
     sta @current_map+2
     ; ---
 
-    ldx #0268
-    stx @screen_m_x
-    ldx #0038
-    stx @screen_m_y
+    ;ldx #0268
+    ;stx @screen_m_x
+    ;ldx #0038
+    ;stx @screen_m_y
 
     tsx
-    pea 03cd
-    ;pea 0000
+    ;pea 03cd
+    pea 0000
     pea 0000
     jsr @InitTilemapBuffer
     txs
@@ -297,179 +297,58 @@ exit_handle_input:
 ;**************************************
 UpdateBGScroll:
     php
+
     rep #20
-    ldx @screen_x_velocity
+    lda @screen_x_velocity
     beq @check_vertical_scrolling
 
+    ldx @screen_m_x
+    stx @prev_screen_m_x
 
-    ; here first check if can scroll horizontally
-    lda @screen_m_x
-    pha                 ; save initial value
     clc
-    adc @screen_x_velocity
+    adc @screen_m_x
     sta @screen_m_x
-    pha                 ; save new value
 
     cmp #0000
     bmi @skip_horizontal_scrolling
 
     clc
-    adc #0100           ; add screen width
+    adc #0100
     cmp @current_map_width_pixel
     beq @continue_horizontal_scrolling
     bcs @skip_horizontal_scrolling
 
 continue_horizontal_scrolling:
-    pla
-    sta @screen_m_x     ; restore new value
-    pla
-    sep #20
-
-    ; --- update tilemap relative x coordinates
-    lda @screen_tm_x
-    pha                 ; save previous value
-    clc
-    adc @screen_x_velocity
-    sta @screen_tm_x    ; store new value
-
-    bit #0f
-    bne @skip_column_update
-    ; here copy new column (new x % 8 == 0)
-    cmp 01,s
-    bcc @update_column_before
-    ; update column ahead here
-
-    lda @screen_tm_x
-    pha
-    sec
-    sbc @screen_x_velocity
-    sta @screen_tm_x
-    jsr @TilemapIndexFromScreenCoords
-    pla
-    sta @screen_tm_x
-
-    ; here we need to update X first before calling method
-    rep #20
-    lda @screen_m_x
-    pha
-    clc
-    adc #0100
-    sta @screen_m_x
-    jsr @MapIndexFromScreenCoords
-    pla
-    sta @screen_m_x
-    sep #20
-    bra @issou
-
-update_column_before:
-    ; update column before here
-    jsr @TilemapIndexFromScreenCoords   ; result in X
-    jsr @MapIndexFromScreenCoords       ; result in Y
-
-issou:
-    phy
-    phx
-    jsr @CopyMapColumnToTileMapBuffer
-    plx
-    ply
-
-skip_column_update:
-    pla
+    jsr @UpdateBGHorizontalScroll
     bra @check_vertical_scrolling
 
 skip_horizontal_scrolling:
-    rep #20
-    pla
-    pla
-    sta @screen_m_x     ; restore initial value
+    lda @prev_screen_m_x
+    sta @screen_m_x
 
 check_vertical_scrolling:
-    rep #20
-    ldx @screen_y_velocity
-    beq @exit_bg_scrolling
 
-    ; here first check if can scroll vertically
-    lda @screen_m_y
-    pha                 ; save initial value
-    clc
-    adc @screen_y_velocity
-    sta @screen_m_y
-    pha                 ; save new value
+exit_update_bg_scroll:
+    plp
+    rts
 
-    cmp #0000
-    bmi @skip_vertical_scrolling
-
-    clc
-    adc #00e0           ; add screen height
-    cmp @current_map_height_pixel
-    beq @continue_vertical_scrolling
-    bcs @skip_vertical_scrolling
-
-continue_vertical_scrolling:
-    pla
-    sta @screen_m_y     ; restore new value
-    pla
+;**************************************
+;
+; Update Background Horizontal Scrolling
+;
+;**************************************
+UpdateBGHorizontalScroll:
+    php
     sep #20
 
-    ; --- update tilemap relative y coordinates
-    lda @screen_tm_y
-    pha
+    lda @screen_tm_x
+    sta @prev_screen_tm_x
+
     clc
-    adc @screen_y_velocity
-    sta @screen_tm_y
-
-    ;bit #07
-    ;bne @skip_row_update
-    ; here check if need to copy new row (if new y % 8 == 0)
-    cmp 01,s
-    bcc @update_row_before
-
-    lda @screen_tm_y
-    pha
-    clc
-    adc #e0
-    sta @screen_tm_y
-    jsr @TilemapIndexFromScreenCoords
-    pla
-    sta @screen_tm_y
-
-    ; here we need to update Y first before calling method
-    rep #20
-    lda @screen_m_y
-    pha
-    clc
-    adc #00e0
-    sta @screen_m_y
-    jsr @MapIndexFromScreenCoords
-    pla
-    sta @screen_m_y
-    sep #20
-    bra @issou2
-
-update_row_before:
-    jsr @TilemapIndexFromScreenCoords   ; result in X
-    jsr @MapIndexFromScreenCoords       ; result in Y
-
-issou2:
-    phy
-    phx
-    jsr @CopyMapRowToTileMapBuffer
-    plx
-    ply
+    adc @screen_x_velocity
+    sta @screen_tm_x
 
 
-skip_row_update:
-    pla
-    bra @exit_bg_scrolling
-
-skip_vertical_scrolling:
-    rep #20
-    pla
-    pla
-    sta @screen_m_y     ; restore initial value
-
-
-exit_bg_scrolling:
 
     plp
     rts
@@ -913,11 +792,15 @@ ClearRegisters:
 
     stz @screen_tm_x
     stz @screen_tm_y
+    stz @prev_screen_tm_x
+    stz @prev_screen_tm_y
+    stz @screen_x_velocity
+    stz @screen_y_velocity
     rep #20
     stz @screen_m_x
     stz @screen_m_y
-    stz @screen_x_velocity
-    stz @screen_y_velocity
+    stz @prev_screen_m_x
+    stz @prev_screen_m_y
     sep #20
 
 
