@@ -694,7 +694,7 @@ InitTilemapBuffer:
     phd
     php
 
-    lda #20             ; loop counter
+    lda #1c             ; loop counter
     pha                 ; reserve as local variable
 
     tsc

@@ -18,10 +18,10 @@
 8. ~~allow scrolling with arrows~~
 
 - ~~register arrow presses & update bg scroll accordingly~~
-- keep track of bg scroll position relative to map (top left corner of screen)
+- ~~keep track of bg scroll position relative to map (top left corner of screen)~~
 - ~~keep track of bg scroll position relative to tilemap (top left corner of screen)~~
-- routine to convert screen top left position to map index/tilemap index
-- use bg scroll to copy a new row/column when crossing a row/column threshold (every 8px)
+- ~~routine to convert screen top left position to map index/tilemap index~~
+- ~~use bg scroll to copy a new row/column when crossing a row/column threshold (every 8px)~~
 
 ## BG update strategy:
 ```
@@ -31,8 +31,8 @@ if (screen_m_x < 0 || screen_m_x > map_w - screen_w) || (screen_m_y < 0 || scree
 if screen_tm_x crosses 8 threshold : update column
 if screen_tm_y crosses 8 threshold : update row
 ```
-9. test with medium map
-10. test with big map
+9. ~~test with medium map~~
+10. ~~test with big map~~
 11. change map with A,B,X,Y
 
 ???
