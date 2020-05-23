@@ -328,6 +328,33 @@ skip_horizontal_scrolling:
 
 check_vertical_scrolling:
 
+    lda @screen_y_velocity
+    beq @exit_update_bg_scroll
+
+    ldx @screen_m_y
+    stx @prev_screen_m_y
+
+    clc
+    adc @screen_m_y
+    sta @screen_m_y
+
+    cmp #0000
+    bmi @skip_vertical_scrolling
+
+    clc
+    adc #00e0
+    cmp @current_map_height_pixel
+    beq @continue_vertical_scrolling
+    bcs @skip_vertical_scrolling
+
+continue_vertical_scrolling:
+    jsr @UpdateBGVerticalScroll
+    bra @exit_update_bg_scroll
+
+skip_vertical_scrolling:
+    lda @prev_screen_m_y
+    sta @screen_m_y
+
 exit_update_bg_scroll:
     plp
     rts
@@ -358,8 +385,6 @@ UpdateBGHorizontalScroll:
 
 update_column_ahead:
     lda @prev_screen_tm_x
-    bit #07
-    bne @skip_column_update
 
     lda @screen_tm_x
     pha
@@ -389,6 +414,67 @@ copy_new_column:
     ply
 
 skip_column_update:
+    plp
+    rts
+
+;**************************************
+;
+; Update Background Horizontal Scrolling
+;
+;**************************************
+UpdateBGVerticalScroll:
+    php
+    sep #20
+
+    lda @screen_tm_y
+    sta @prev_screen_tm_y
+
+    clc
+    adc @screen_y_velocity
+    sta @screen_tm_y
+
+
+    cmp @prev_screen_tm_y
+    bpl @update_row_ahead
+
+    jsr @TilemapIndexFromScreenCoords
+    jsr @MapIndexFromScreenCoords
+    bra @copy_new_row
+
+update_row_ahead:
+    brk 00
+    lda @prev_screen_tm_y
+    bit #07
+    bne @skip_row_update
+
+    lda @screen_tm_y
+    pha
+    clc
+    adc #e0
+    sta @screen_tm_y
+    jsr @TilemapIndexFromScreenCoords
+    pla
+    sta @screen_tm_y
+
+    rep #20
+    lda @screen_m_y
+    pha
+    clc
+    adc #00e0
+    sta @screen_m_y
+    jsr @MapIndexFromScreenCoords
+    pla
+    sta @screen_m_y
+    sep #20
+
+copy_new_row:
+    phy
+    phx
+    jsr @CopyMapRowToTileMapBuffer
+    plx
+    ply
+
+skip_row_update:
     plp
     rts
 
