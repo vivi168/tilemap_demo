@@ -109,7 +109,7 @@ ResetVector:
     sta 2126
     lda #f7
     sta 2127
-    lda #00
+    lda #01
     sta 212e
 
     ; --- some initialization
@@ -349,7 +349,46 @@ UpdateBGHorizontalScroll:
     sta @screen_tm_x
 
 
+    cmp @prev_screen_tm_x
+    bpl @update_column_ahead
 
+    jsr @TilemapIndexFromScreenCoords
+    jsr @MapIndexFromScreenCoords
+    bra @copy_new_column
+
+update_column_ahead:
+    lda @prev_screen_tm_x
+    bit #07
+    bne @skip_column_update
+
+    lda @screen_tm_x
+    pha
+    lda @prev_screen_tm_x
+    sta @screen_tm_x
+    jsr @TilemapIndexFromScreenCoords
+    pla
+    sta @screen_tm_x
+
+    rep #20
+    lda @screen_m_x
+    pha
+    lda @prev_screen_m_x
+    clc
+    adc #0100
+    sta @screen_m_x
+    jsr @MapIndexFromScreenCoords
+    pla
+    sta @screen_m_x
+    sep #20
+
+copy_new_column:
+    phy
+    phx
+    jsr @CopyMapColumnToTileMapBuffer
+    plx
+    ply
+
+skip_column_update:
     plp
     rts
 
