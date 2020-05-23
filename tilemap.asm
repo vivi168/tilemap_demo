@@ -133,13 +133,7 @@ ResetVector:
     sta @current_map+2
     ; ---
 
-    ;ldx #0268
-    ;stx @screen_m_x
-    ;ldx #0038
-    ;stx @screen_m_y
-
     tsx
-    ;pea 03cd
     pea 0000
     pea 0000
     jsr @InitTilemapBuffer
@@ -245,7 +239,7 @@ MainLoop:
 HandleInput:
     rep #20
 
-    lda @joy1_press
+    lda @joy1_held
 
     bit #0800
     bne @move_up
@@ -264,25 +258,25 @@ HandleInput:
     bra @exit_handle_input
 
 move_up:
-    lda #fff8           ; negative velocity
+    lda #fffe           ; negative velocity
     sta @screen_y_velocity
     stz @screen_x_velocity
     bra @exit_handle_input
 
 move_down:
-    lda #0008           ; positive velocity
+    lda #0002           ; positive velocity
     sta @screen_y_velocity
     stz @screen_x_velocity
     bra @exit_handle_input
 
 move_left:
-    lda #fff8
+    lda #fffe
     sta @screen_x_velocity
     stz @screen_y_velocity
     bra @exit_handle_input
 
 move_right:
-    lda #0008
+    lda #0002
     sta @screen_x_velocity
     stz @screen_y_velocity
 
@@ -375,7 +369,6 @@ UpdateBGHorizontalScroll:
     adc @screen_x_velocity
     sta @screen_tm_x
 
-
     cmp @prev_screen_tm_x
     bpl @update_column_ahead
 
@@ -419,7 +412,7 @@ skip_column_update:
 
 ;**************************************
 ;
-; Update Background Horizontal Scrolling
+; Update Background Vertical Scrolling
 ;
 ;**************************************
 UpdateBGVerticalScroll:
@@ -433,20 +426,18 @@ UpdateBGVerticalScroll:
     adc @screen_y_velocity
     sta @screen_tm_y
 
+    lda @prev_screen_tm_y
+    bit #07
+    bne @skip_row_update
 
-    cmp @prev_screen_tm_y
-    bpl @update_row_ahead
+    cmp @screen_tm_y
+    bmi @update_row_ahead
 
     jsr @TilemapIndexFromScreenCoords
     jsr @MapIndexFromScreenCoords
     bra @copy_new_row
 
 update_row_ahead:
-    brk 00
-    lda @prev_screen_tm_y
-    bit #07
-    bne @skip_row_update
-
     lda @screen_tm_y
     pha
     clc
