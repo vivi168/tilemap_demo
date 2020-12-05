@@ -408,7 +408,7 @@ InitTilemapBuffer:
     phd
     php
 
-    lda #1c             ; loop counter
+    lda #20             ; loop counter, number of rows to copy
     pha                 ; reserve as local variable
 
     tsc

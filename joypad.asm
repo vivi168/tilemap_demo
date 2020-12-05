@@ -24,7 +24,7 @@ read_joy1_data:
 HandleInput:
     rep #20
 
-    lda @joy1_held
+    lda @joy1_press
 
     bit #0800
     bne @move_up
@@ -43,25 +43,25 @@ HandleInput:
     bra @exit_handle_input
 
 move_up:
-    lda #fffe           ; negative velocity
+    lda #fff8           ; negative velocity
     sta @screen_y_velocity
     stz @screen_x_velocity
     bra @exit_handle_input
 
 move_down:
-    lda #0002           ; positive velocity
+    lda #0008           ; positive velocity
     sta @screen_y_velocity
     stz @screen_x_velocity
     bra @exit_handle_input
 
 move_left:
-    lda #fffe
+    lda #fff8
     sta @screen_x_velocity
     stz @screen_y_velocity
     bra @exit_handle_input
 
 move_right:
-    lda #0002
+    lda #0008
     sta @screen_x_velocity
     stz @screen_y_velocity
 
