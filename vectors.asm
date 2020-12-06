@@ -54,23 +54,26 @@ ResetVector:
 
     ; --- some initialization
     rep #20
-    lda !big_map+2              ; map[2] = width
+    lda !big_map+2              ; map[2] = height|width
+    xba
+    and #00ff
     sta @current_map_width
     asl
     asl
     asl
     sta @current_map_width_pixel
-    lda !big_map+4              ; map[4] = height
+    lda !big_map+2              ; map[2] = height|width
+    and #00ff
     sta @current_map_height
     asl
     asl
     asl
     sta @current_map_height_pixel
     sep #20
-    ldx #@big_map+6
+    ldx #@big_map+4
     stx @current_map
-    lda #^big_map+6
-    sta @current_map+2
+    lda #^big_map+4
+    sta @current_map+2          ; LL HH BB (little endian)
     ; ---
 
     tsx
