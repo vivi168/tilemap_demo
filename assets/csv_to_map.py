@@ -16,7 +16,7 @@ if __name__ == '__main__':
     map_size = width * height
     if map_size > 0xffff:
         exit('map to large')
-    ms_b1, ms_b2 = (map_size & 0xffff).to_bytes(2, 'big')
+    ms_b1, ms_b2 = (map_size & 0xffff).to_bytes(2, 'big') # map size byte 1 & 2
 
     print(hex(ms_b2), hex(ms_b1), hex(width), hex(height))
     raw_tilemap = [ms_b2, ms_b1, width, 00, height, 00] + tiles

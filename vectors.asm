@@ -54,13 +54,13 @@ ResetVector:
 
     ; --- some initialization
     rep #20
-    lda !big_map+2
+    lda !big_map+2              ; map[2] = width
     sta @current_map_width
     asl
     asl
     asl
     sta @current_map_width_pixel
-    lda !big_map+4
+    lda !big_map+4              ; map[4] = height
     sta @current_map_height
     asl
     asl
