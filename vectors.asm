@@ -35,7 +35,14 @@ ResetVector:
     lda #01             ; enable BG1&3
     sta 212c            ; TM
 
-    ; windowing settings
+    ; --- OBJ settings
+    lda #02             ; sprite 8x8 small, 16x16 big
+    sta 2101            ; oam start @VRAM[8000]
+
+    jsr @InitOamBuffer
+    jsr @TransferOamBuffer
+
+    ; --- windowing settings
     lda #03
     sta 2123
     lda #08
@@ -104,6 +111,29 @@ ResetVector:
     pha
     jsr @CgramDmaTransfer
     txs                 ; restore stack pointer
+
+    ; Copy spritesheet.bin to VRAM
+    tsx             ; save stack pointer
+    pea 4000        ; vram_dest_addr
+    pea @spritesheet
+    lda #^spritesheet
+    pha
+    pea 0c00        ; bytes_to_trasnfer
+    jsr @VramDmaTransfer
+    txs             ; restore stack pointer
+
+    ; Copy spritesheet-pal.bin to CGRAM
+    tsx                 ; save stack pointer
+    lda #80             ; cgram dest addr (@CGRAM[0100] really, 2 bytes step)
+    pha
+    pea @spritesheet_pal
+    lda #^spritesheet_pal
+    pha
+    lda #20             ; bytes_to_trasnfer
+    pha
+    jsr @CgramDmaTransfer
+    txs                 ; restore stack pointer
+
     ; ----
 
     lda #0f             ; release forced blanking, set screen to full brightness
@@ -152,6 +182,8 @@ NmiVector:
     pea 0800            ; nb of bytes to transfer
     jsr @VramDmaTransfer
     txs                 ; restore stack pointer
+
+    jsr @TransferOamBuffer
 
     rep #30
     ply

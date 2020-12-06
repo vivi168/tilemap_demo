@@ -18,6 +18,7 @@
 .include dma.asm
 .include joypad.asm
 .include map_utils.asm
+.include object.asm
 
 MainLoop:
     wai

@@ -57,3 +57,28 @@ CgramDmaTransfer:
     pld
     plx
     rts
+
+TransferOamBuffer:
+    ldx #0000
+    stx 2102        ; OAMDADDL
+
+    lda #04         ; OAMDATA 21*04*
+    sta 4301        ; BBAD0
+
+    ; from 7e/2000
+    ldx #@oam_buffer
+    stx 4302        ; A1T0L
+    lda #^oam_buffer
+    sta 4304        ; A1T0B
+
+    ; transfer 220 bytes
+    ldx #0220
+    stx 4305        ; DAS0L
+
+    ; DMA params: A to B
+    lda #00
+    sta 4300        ; DMAP0
+    ; initiate DMA via channel 0 (LSB = channel 0, MSB channel 7)
+    lda #01
+    sta 420b        ; MDMAEN
+    rts
