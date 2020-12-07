@@ -91,8 +91,6 @@ UpdateBGHorizontalScroll:
     bra @copy_new_column
 
 update_column_ahead:
-    lda @prev_screen_tm_x
-
     lda @screen_tm_x
     pha
     lda @prev_screen_tm_x
@@ -120,7 +118,6 @@ copy_new_column:
     plx
     ply
 
-skip_column_update:
     plp
     rts
 
@@ -140,12 +137,8 @@ UpdateBGVerticalScroll:
     adc @screen_y_velocity
     sta @screen_tm_y
 
-    lda @prev_screen_tm_y
-    bit #07
-    bne @skip_row_update
-
-    cmp @screen_tm_y
-    bmi @update_row_ahead
+    cmp @prev_screen_tm_y
+    bpl @update_row_ahead
 
     jsr @TilemapIndexFromScreenCoords
     jsr @MapIndexFromScreenCoords
@@ -179,7 +172,6 @@ copy_new_row:
     plx
     ply
 
-skip_row_update:
     plp
     rts
 
