@@ -17,11 +17,11 @@ ResetVector:
     lda #01
     sta 2105            ; BGMODE 1
 
-    lda @screen_tm_x    ; first write = lower byte
+    lda @bg_scroll_x    ; first write = lower byte
     sta 210d
     lda #00             ; second write = upper 2 bits
     sta 210d            ; horizontal scroll
-    lda @screen_tm_y
+    lda @bg_scroll_y
     dec
     sta 210e
     lda #00
@@ -165,12 +165,12 @@ NmiVector:
 
     jsr @ReadJoyPad1
 
-    lda @screen_tm_x
+    lda @bg_scroll_x
     sta 210d
     lda #00
     sta 210d
 
-    lda @screen_tm_y
+    lda @bg_scroll_y
     dec                 ; Y scroll is offset by -1 (hardware quirk)
     sta 210e
     lda #00

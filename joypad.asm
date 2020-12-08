@@ -38,32 +38,32 @@ HandleInput:
     bit #0100
     bne @move_right
 
-    stz @screen_x_velocity
-    stz @screen_y_velocity
+    stz @camera_velocity_x
+    stz @camera_velocity_y
     bra @exit_handle_input
 
 move_up:
     lda #fff8           ; negative velocity
-    sta @screen_y_velocity
-    stz @screen_x_velocity
+    sta @camera_velocity_y
+    stz @camera_velocity_x
     bra @exit_handle_input
 
 move_down:
     lda #0008           ; positive velocity
-    sta @screen_y_velocity
-    stz @screen_x_velocity
+    sta @camera_velocity_y
+    stz @camera_velocity_x
     bra @exit_handle_input
 
 move_left:
     lda #fff8
-    sta @screen_x_velocity
-    stz @screen_y_velocity
+    sta @camera_velocity_x
+    stz @camera_velocity_y
     bra @exit_handle_input
 
 move_right:
     lda #0008
-    sta @screen_x_velocity
-    stz @screen_y_velocity
+    sta @camera_velocity_x
+    stz @camera_velocity_y
 
 exit_handle_input:
     sep #20

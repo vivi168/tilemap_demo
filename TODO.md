@@ -25,11 +25,11 @@
 
 ## BG update strategy:
 ```
-if (screen_m_x < 0 || screen_m_x > map_w - screen_w) || (screen_m_y < 0 || screen_m_y > map_h - screen_h)
+if (camera_x < 0 || camera_x > map_w - screen_w) || (camera_y < 0 || camera_y > map_h - screen_h)
     => stop scrolling to prevent going out of bound
 
-if screen_tm_x crosses 8 threshold : update column
-if screen_tm_y crosses 8 threshold : update row
+if bg_scroll_x crosses 8 threshold : update column
+if bg_scroll_y crosses 8 threshold : update row
 ```
 9. ~~test with medium map~~
 10. ~~test with big map~~

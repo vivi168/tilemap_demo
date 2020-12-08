@@ -91,17 +91,17 @@ ClearRegisters:
 
     ; ---- custom registers
 
-    stz @screen_tm_x
-    stz @screen_tm_y
-    stz @prev_screen_tm_x
-    stz @prev_screen_tm_y
-    stz @screen_x_velocity
-    stz @screen_y_velocity
+    stz @bg_scroll_x
+    stz @bg_scroll_y
+    stz @prev_bg_scroll_x
+    stz @prev_bg_scroll_y
+    stz @camera_velocity_x
+    stz @camera_velocity_y
     rep #20
-    stz @screen_m_x
-    stz @screen_m_y
-    stz @prev_screen_m_x
-    stz @prev_screen_m_y
+    stz @camera_x
+    stz @camera_y
+    stz @prev_camera_x
+    stz @prev_camera_y
     sep #20
 
     rts

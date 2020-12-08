@@ -7,15 +7,15 @@ UpdateBGScroll:
     php
 
     rep #20
-    lda @screen_x_velocity
+    lda @camera_velocity_x
     beq @check_vertical_scrolling
 
-    ldx @screen_m_x
-    stx @prev_screen_m_x
+    ldx @camera_x
+    stx @prev_camera_x
 
     clc
-    adc @screen_m_x
-    sta @screen_m_x
+    adc @camera_x
+    sta @camera_x
 
     cmp #0000
     bmi @skip_horizontal_scrolling
@@ -31,20 +31,20 @@ continue_horizontal_scrolling:
     bra @check_vertical_scrolling
 
 skip_horizontal_scrolling:
-    lda @prev_screen_m_x
-    sta @screen_m_x
+    lda @prev_camera_x
+    sta @camera_x
 
 check_vertical_scrolling:
 
-    lda @screen_y_velocity
+    lda @camera_velocity_y
     beq @exit_update_bg_scroll
 
-    ldx @screen_m_y
-    stx @prev_screen_m_y
+    ldx @camera_y
+    stx @prev_camera_y
 
     clc
-    adc @screen_m_y
-    sta @screen_m_y
+    adc @camera_y
+    sta @camera_y
 
     cmp #0000
     bmi @skip_vertical_scrolling
@@ -60,8 +60,8 @@ continue_vertical_scrolling:
     bra @exit_update_bg_scroll
 
 skip_vertical_scrolling:
-    lda @prev_screen_m_y
-    sta @screen_m_y
+    lda @prev_camera_y
+    sta @camera_y
 
 exit_update_bg_scroll:
     plp
@@ -76,14 +76,14 @@ UpdateBGHorizontalScroll:
     php
     sep #20
 
-    lda @screen_tm_x
-    sta @prev_screen_tm_x
+    lda @bg_scroll_x
+    sta @prev_bg_scroll_x
 
     clc
-    adc @screen_x_velocity
-    sta @screen_tm_x
+    adc @camera_velocity_x
+    sta @bg_scroll_x
 
-    cmp @prev_screen_tm_x
+    cmp @prev_bg_scroll_x
     bpl @update_column_ahead
 
     jsr @TilemapIndexFromScreenCoords
@@ -91,24 +91,24 @@ UpdateBGHorizontalScroll:
     bra @copy_new_column
 
 update_column_ahead:
-    lda @screen_tm_x
+    lda @bg_scroll_x
     pha
-    lda @prev_screen_tm_x
-    sta @screen_tm_x
+    lda @prev_bg_scroll_x
+    sta @bg_scroll_x
     jsr @TilemapIndexFromScreenCoords
     pla
-    sta @screen_tm_x
+    sta @bg_scroll_x
 
     rep #20
-    lda @screen_m_x
+    lda @camera_x
     pha
-    lda @prev_screen_m_x
+    lda @prev_camera_x
     clc
     adc #0100
-    sta @screen_m_x
+    sta @camera_x
     jsr @MapIndexFromScreenCoords
     pla
-    sta @screen_m_x
+    sta @camera_x
     sep #20
 
 copy_new_column:
@@ -130,14 +130,14 @@ UpdateBGVerticalScroll:
     php
     sep #20
 
-    lda @screen_tm_y
-    sta @prev_screen_tm_y
+    lda @bg_scroll_y
+    sta @prev_bg_scroll_y
 
     clc
-    adc @screen_y_velocity
-    sta @screen_tm_y
+    adc @camera_velocity_y
+    sta @bg_scroll_y
 
-    cmp @prev_screen_tm_y
+    cmp @prev_bg_scroll_y
     bpl @update_row_ahead
 
     jsr @TilemapIndexFromScreenCoords
@@ -145,24 +145,24 @@ UpdateBGVerticalScroll:
     bra @copy_new_row
 
 update_row_ahead:
-    lda @screen_tm_y
+    lda @bg_scroll_y
     pha
     clc
     adc #e0
-    sta @screen_tm_y
+    sta @bg_scroll_y
     jsr @TilemapIndexFromScreenCoords
     pla
-    sta @screen_tm_y
+    sta @bg_scroll_y
 
     rep #20
-    lda @screen_m_y
+    lda @camera_y
     pha
     clc
     adc #00e0
-    sta @screen_m_y
+    sta @camera_y
     jsr @MapIndexFromScreenCoords
     pla
-    sta @screen_m_y
+    sta @camera_y
     sep #20
 
 copy_new_row:
@@ -184,7 +184,7 @@ TilemapIndexFromScreenCoords:
     php
 
     sep #20
-    lda @screen_tm_x
+    lda @bg_scroll_x
     lsr
     lsr
     lsr                 ; x //= 8
@@ -193,7 +193,7 @@ TilemapIndexFromScreenCoords:
     pha
 
     sep #20
-    lda @screen_tm_y
+    lda @bg_scroll_y
     cmp #08
     bcc @skip_tm_y_calculation      ; no need to do complex math on y < 8 (index 0)
 
@@ -232,14 +232,14 @@ MapIndexFromScreenCoords:
     php
     phd
 
-    ldy @screen_m_y
+    ldy @camera_y
     phy ; p1
 
     tsc
     tcd
 
     rep #20
-    lda @screen_m_x
+    lda @camera_x
     lsr
     lsr
     lsr
