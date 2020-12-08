@@ -83,6 +83,8 @@ UpdateBGHorizontalScroll:
     adc @camera_velocity_x
     sta @bg_scroll_x
 
+    bit #07
+    bne @skip_column_update
     cmp @prev_bg_scroll_x
     bpl @update_column_ahead
 
@@ -118,6 +120,7 @@ copy_new_column:
     plx
     ply
 
+skip_column_update:
     plp
     rts
 
@@ -137,8 +140,11 @@ UpdateBGVerticalScroll:
     adc @camera_velocity_y
     sta @bg_scroll_y
 
-    cmp @prev_bg_scroll_y
-    bpl @update_row_ahead
+    lda @prev_bg_scroll_y
+    bit #07
+    bne @skip_row_update
+    cmp @bg_scroll_y
+    bmi @update_row_ahead
 
     jsr @TilemapIndexFromScreenCoords
     jsr @MapIndexFromScreenCoords
@@ -172,6 +178,7 @@ copy_new_row:
     plx
     ply
 
+skip_row_update:
     plp
     rts
 
