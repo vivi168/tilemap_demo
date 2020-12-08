@@ -20,6 +20,8 @@ current_map_height:       .rb 2           ; height of current map (in tiles)
 
 current_map_width_pixel:  .rb 2
 current_map_height_pixel: .rb 2
-tilemap_buffer:           .rb 800
 
+.org 7e2000
+
+tilemap_buffer:           .rb 800
 oam_buffer:               .rb 300         ; OAM buffer
