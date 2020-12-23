@@ -77,6 +77,9 @@ ResetVector:
     ; ---
 
     tsx
+    ; formula
+    ; first param = map_index, = (camera_x + camera_y * width) / 8
+    ; eg : camera_x = 0x268, camera_y = 0x38, pea 0x3cd
     pea 0000
     pea 0000
     jsr @InitTilemapBuffer
