@@ -1,3 +1,61 @@
+UpdateCamera:
+    php
+
+    rep #20
+
+    ; prev_camera_x = camera_x
+    lda @camera_x
+    sta @prev_camera_x
+
+    ; camera_x += camera_velocity_x
+    clc
+    adc @camera_velocity_x
+    sta @camera_x
+
+    ; if camera_x < 0, camera_x = prev
+    cmp #0000
+    bmi @restore_camera_x
+
+    ; if camera_x + screen_w > map_w, camera_x = prev
+    clc
+    adc #0100
+    cmp @current_map_width_pixel
+    beq @check_camera_y
+    bcc @check_camera_y
+
+restore_camera_x:
+    lda @prev_camera_x
+    sta @camera_x
+
+check_camera_y:
+    ; prev_camera_y = camera_y
+    lda @camera_y
+    sta @prev_camera_y
+
+    ; camera_y += camera_velocity_y
+    clc
+    adc @camera_velocity_y
+    sta @camera_y
+
+    ; if camera_y < 0, camera_y = prev
+    cmp #0000
+    bmi @restore_camera_y
+
+    ; if camera_y + screen_w > map_w, camera_y = prev
+    clc
+    adc #00e0
+    cmp @current_map_height_pixel
+    beq @exit_camera_update
+    bcc @exit_camera_update
+
+restore_camera_y:
+    lda @prev_camera_y
+    sta @camera_y
+
+exit_camera_update:
+    plp
+    rts
+
 ;**************************************
 ;
 ; Update Background Scrolling
@@ -7,61 +65,19 @@ UpdateBGScroll:
     php
 
     rep #20
-    lda @camera_velocity_x
+    lda @camera_x
+    cmp @prev_camera_x
     beq @check_vertical_scrolling
 
-    ldx @camera_x
-    stx @prev_camera_x
-
-    clc
-    adc @camera_x
-    sta @camera_x
-
-    cmp #0000
-    bmi @skip_horizontal_scrolling
-
-    clc
-    adc #0100
-    cmp @current_map_width_pixel
-    beq @continue_horizontal_scrolling
-    bcs @skip_horizontal_scrolling
-
-continue_horizontal_scrolling:
     jsr @UpdateBGHorizontalScroll
-    bra @check_vertical_scrolling
-
-skip_horizontal_scrolling:
-    lda @prev_camera_x
-    sta @camera_x
 
 check_vertical_scrolling:
 
-    lda @camera_velocity_y
+    lda @camera_y
+    cmp @prev_camera_y
     beq @exit_update_bg_scroll
 
-    ldx @camera_y
-    stx @prev_camera_y
-
-    clc
-    adc @camera_y
-    sta @camera_y
-
-    cmp #0000
-    bmi @skip_vertical_scrolling
-
-    clc
-    adc #00e0
-    cmp @current_map_height_pixel
-    beq @continue_vertical_scrolling
-    bcs @skip_vertical_scrolling
-
-continue_vertical_scrolling:
     jsr @UpdateBGVerticalScroll
-    bra @exit_update_bg_scroll
-
-skip_vertical_scrolling:
-    lda @prev_camera_y
-    sta @camera_y
 
 exit_update_bg_scroll:
     plp
@@ -76,13 +92,19 @@ UpdateBGHorizontalScroll:
     php
     sep #20
 
+    ; save old scroll
     lda @bg_scroll_x
     sta @prev_bg_scroll_x
 
+    ; new scroll = bg_scroll_x + (camera_x - prev_camera_x)
+    lda @camera_x
+    sec
+    sbc @prev_camera_x
     clc
-    adc @camera_velocity_x
+    adc @bg_scroll_x
     sta @bg_scroll_x
 
+    ; skip update unless we are on a new tile threshold
     bit #07
     bne @skip_column_update
     cmp @prev_bg_scroll_x
@@ -136,8 +158,11 @@ UpdateBGVerticalScroll:
     lda @bg_scroll_y
     sta @prev_bg_scroll_y
 
+    lda @camera_y
+    sec
+    sbc @prev_camera_y
     clc
-    adc @camera_velocity_y
+    adc @bg_scroll_y
     sta @bg_scroll_y
 
     lda @prev_bg_scroll_y

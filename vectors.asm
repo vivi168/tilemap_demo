@@ -36,7 +36,7 @@ ResetVector:
     sta 212c            ; TM
 
     ; --- OBJ settings
-    lda #02             ; sprite 8x8 small, 16x16 big
+    lda #62             ; sprite 16x16 small, 32x32 big
     sta 2101            ; oam start @VRAM[8000]
 
     jsr @InitOamBuffer
