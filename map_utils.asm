@@ -258,20 +258,21 @@ exit_tm_index:
 ;**************************************
 ;
 ; result in Y
-;
+; formula: i = x + y * width
 ;**************************************
 MapIndexFromScreenCoords:
     php
     phd
 
     ldy @camera_y
-    phy ; p1
+    phy ; y => 01
 
     tsc
     tcd
 
     rep #20
     lda @camera_x
+    ; x //= 8
     lsr
     lsr
     lsr
@@ -279,27 +280,29 @@ MapIndexFromScreenCoords:
     cpy #0008
     bcc @skip_m_y_calculation
 
-    pha ; p2
+    pha ; x => 02
 
+    ; y //= 8
     lsr 01
     lsr 01
     lsr 01
 
     lda @current_map_width
     lsr
+    ; bug here, if map_w % 3 == 0, wrong coordinates
 mult_y_by_map_w:
     asl 01
     lsr
     bne @mult_y_by_map_w
 
-    pla ; p2
+    pla ; p2, a = x
     clc
-    adc 01
+    adc 01 ; x += y
 
 skip_m_y_calculation:
     ply ; p1
 
-    tay
+    tay ; y = 0 (first row, return x // 8)
 
     pld
     plp
