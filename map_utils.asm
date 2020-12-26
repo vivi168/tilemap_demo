@@ -138,6 +138,7 @@ update_column_ahead:
 copy_new_column:
     phy
     phx
+    brk 00
     jsr @CopyMapColumnToTileMapBuffer
     plx
     ply
@@ -199,6 +200,7 @@ update_row_ahead:
 copy_new_row:
     phy
     phx
+    brk 00
     jsr @CopyMapRowToTileMapBuffer
     plx
     ply
@@ -262,49 +264,39 @@ exit_tm_index:
 ;**************************************
 MapIndexFromScreenCoords:
     php
-    phd
 
-    ldy @camera_y
-    phy ; y => 01
+    lda @current_map_width ; should always be 8 bits (<= 255)
+    sta 4202 ; multiplicand 1
 
-    tsc
-    tcd
+    brk 00
+    rep #20
+    lda @camera_y
+    ; camera_y //= 8
+    ; -> ensure it's always 8 bits
+    lsr
+    lsr
+    lsr
+    sep #20
+    sta 4203 ; multiplicand 2
+
+    nop
+    nop
+    nop
+    nop ; wait 8 cycles
 
     rep #20
+    lda 4216 ; 16 bits mult result
+
+    pha
     lda @camera_x
-    ; x //= 8
     lsr
     lsr
     lsr
-
-    cpy #0008
-    bcc @skip_m_y_calculation
-
-    pha ; x => 02
-
-    ; y //= 8
-    lsr 01
-    lsr 01
-    lsr 01
-
-    lda @current_map_width
-    lsr
-    ; bug here, if map_w % 3 == 0, wrong coordinates
-mult_y_by_map_w:
-    asl 01
-    lsr
-    bne @mult_y_by_map_w
-
-    pla ; p2, a = x
     clc
-    adc 01 ; x += y
+    adc 01,s
+    tay
+    pla
 
-skip_m_y_calculation:
-    ply ; p1
-
-    tay ; y = 0 (first row, return x // 8)
-
-    pld
     plp
     rts
 

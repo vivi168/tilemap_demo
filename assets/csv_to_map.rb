@@ -24,7 +24,7 @@ CSV.foreach(filename) do |row|
     row.each do |cell|
         tile = cell.to_i
         raise "Tile value too big" if tile > 0xff
-        tiles << tile.to_i
+        tiles << tile
     end
 end
 

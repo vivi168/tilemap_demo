@@ -1,5 +1,8 @@
 #!/bin/bash
 ruby -I../SNES_Utils/lib/ ../SNES_Utils/bin/png2snes -f assets/tileset.png -b 4 -a 0x0000
 ruby -I../SNES_Utils/lib/ ../SNES_Utils/bin/png2snes -f assets/spritesheet.png -b 4 -a 0x0000
+ruby -I../SNES_Utils/lib/ ../SNES_Utils/bin/png2snes -f assets/pkmn.png -b 4 -a 0x0000
 
 ruby -I../SNES_Utils/lib ../SNES_Utils/bin/vas -f tilemap.asm
+
+cp out.smc /mnt/c/Users/vivie/Desktop/tilemap.smc
