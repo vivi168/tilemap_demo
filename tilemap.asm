@@ -24,6 +24,7 @@ MainLoop:
     wai
 
     jsr @HandleInput
+    jsr @UpdatePlayer
     jsr @UpdateCamera
     jsr @UpdateBGScroll
 

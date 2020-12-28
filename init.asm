@@ -97,6 +97,16 @@ ClearRegisters:
     stz @prev_bg_scroll_y
     stz @camera_velocity_x
     stz @camera_velocity_y
+
+    stz @player_x
+    stz @player_y
+    stz @prev_player_x
+    stz @prev_player_y
+    stz @player_velocity_x
+    stz @player_velocity_y
+    stz @player_sx
+    stz @player_sy
+
     rep #20
     stz @camera_x
     stz @camera_y

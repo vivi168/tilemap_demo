@@ -32,7 +32,7 @@ ResetVector:
     lda #00             ; BG1 tiles @ VRAM[0000]
     sta 210b            ; BG12NBA
 
-    lda #01             ; enable BG1&3
+    lda #11             ; enable BG1 + sprites
     sta 212c            ; TM
 
     ; --- OBJ settings
@@ -129,7 +129,7 @@ ResetVector:
     pea @spritesheet
     lda #^spritesheet
     pha
-    pea 0c00        ; bytes_to_trasnfer
+    pea 0400        ; bytes_to_trasnfer
     jsr @VramDmaTransfer
     txs             ; restore stack pointer
 

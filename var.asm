@@ -14,6 +14,16 @@ prev_camera_y:            .rb 2
 camera_velocity_x:        .rb 2
 camera_velocity_y:        .rb 2
 
+player_x:                 .rb 1           ; on tilemap, grid relative
+player_y:                 .rb 1
+prev_player_x:            .rb 1           ; grid relative
+prev_player_y:            .rb 1
+player_velocity_x:        .rb 1
+player_velocity_y:        .rb 1
+player_sx:                .rb 1           ; on screen, pixel relative
+player_sy:                .rb 1
+player_anim_state:        .rb 1           ; which entry in animation table
+
 current_map:              .rb 3           ; pointer to current map (map should always be in same bank)
 current_map_width:        .rb 2           ; width of current map (in tiles)
 current_map_height:       .rb 2           ; height of current map (in tiles)
@@ -24,4 +34,5 @@ current_map_height_pixel: .rb 2
 .org 7e2000
 
 tilemap_buffer:           .rb 800
-oam_buffer:               .rb 300         ; OAM buffer
+oam_buffer:               .rb 200         ; OAM buffer
+oam_buffer_hi:            .rb 20
