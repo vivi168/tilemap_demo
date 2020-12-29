@@ -36,12 +36,64 @@ DrawSprite:
 UpdatePlayer:
     php
 
-    lda @player_sx
-    lda #78
+    ;;; X COORD
+
+    lda @player_x
+    sta @prev_player_x
+    lda @player_velocity_x
+    clc
+    adc @player_x
+    sta @player_x
+
+    ; TODO keep player X coord in bound here
+
+    ; player px = player.x * 8
+    rep #20
+    and #00ff
+    asl
+    asl
+    asl
+    sta @player_px
+    sep #20
+
+    ;;; Y COORD
+
+    lda @player_y
+    sta @prev_player_y
+    lda @player_velocity_y
+    clc
+    adc @player_y
+    sta @player_y
+
+    ; TODO keep player Y coord in bound here
+
+    ; player py = player.y * 8
+    rep #20
+    and #00ff
+    asl
+    asl
+    asl
+    sta @player_py
+
+    ;sep #20
+
+    jsr @UpdateCamera
+
+
+
+    ;;; UPDATE OAM
+
+    lda @player_px
+    sec
+    sbc @camera_x
+    sep #20
     sta !oam_buffer
 
-    lda @player_sy
-    lda #68
+    rep #20
+    lda @player_py
+    sec
+    sbc @camera_y
+    sep #20
     sta !oam_buffer+1
 
     ; tile_no (get from player state)

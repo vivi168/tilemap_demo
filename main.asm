@@ -26,7 +26,6 @@ MainLoop:
 
     jsr @HandleInput
     jsr @UpdatePlayer
-    jsr @UpdateCamera
     jsr @UpdateBGScroll
 
     jmp @MainLoop

@@ -7,9 +7,10 @@ UpdateCamera:
     lda @camera_x
     sta @prev_camera_x
 
-    ; camera_x += camera_velocity_x
-    clc
-    adc @camera_velocity_x
+    ; camera_x = player.px - SCREEN_W / 2
+    lda @player_px
+    sec
+    sbc #0080
     sta @camera_x
 
     ; if camera_x < 0, camera_x = prev
@@ -32,9 +33,10 @@ check_camera_y:
     lda @camera_y
     sta @prev_camera_y
 
-    ; camera_y += camera_velocity_y
-    clc
-    adc @camera_velocity_y
+    ; camera_y = player.py - SCREEN_H / 2
+    lda @player_py
+    sec
+    sbc #0070
     sta @camera_y
 
     ; if camera_y < 0, camera_y = prev

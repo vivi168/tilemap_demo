@@ -104,14 +104,17 @@ ClearRegisters:
     stz @prev_player_y
     stz @player_velocity_x
     stz @player_velocity_y
-    stz @player_sx
-    stz @player_sy
+
 
     rep #20
     stz @camera_x
     stz @camera_y
     stz @prev_camera_x
     stz @prev_camera_y
+
+    stz @player_px
+    stz @player_py
+
     sep #20
 
     rts

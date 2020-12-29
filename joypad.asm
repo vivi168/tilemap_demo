@@ -6,6 +6,9 @@
 .define VEL_PL      0002    ; positive velocity
 .define VEL_MI      fffe    ; negative velocity
 
+.define PLAYER_VEL_PL 01
+.define PLAYER_VEL_MI ff
+
 ReadJoyPad1:
     php
 read_joy1_data:
@@ -30,9 +33,10 @@ read_joy1_data:
     rts
 
 HandleInput:
+    php
     rep #20
 
-    lda @joy1_held
+    lda @joy1_press
 
     bit #JOY_UP
     bne @move_up
@@ -46,33 +50,39 @@ HandleInput:
     bit #JOY_RIGHT
     bne @move_right
 
-    stz @camera_velocity_x
-    stz @camera_velocity_y
+    sep #20
+
+    stz @player_velocity_x
+    stz @player_velocity_y
     bra @exit_handle_input
 
 move_up:
-    lda #VEL_MI
-    sta @camera_velocity_y
-    stz @camera_velocity_x
+    sep #20
+    lda #PLAYER_VEL_MI
+    sta @player_velocity_y
+    stz @player_velocity_x
     bra @exit_handle_input
 
 move_down:
-    lda #VEL_PL
-    sta @camera_velocity_y
-    stz @camera_velocity_x
+    sep #20
+    lda #PLAYER_VEL_PL
+    sta @player_velocity_y
+    stz @player_velocity_x
     bra @exit_handle_input
 
 move_left:
-    lda #VEL_MI
-    sta @camera_velocity_x
-    stz @camera_velocity_y
+    sep #20
+    lda #PLAYER_VEL_MI
+    sta @player_velocity_x
+    stz @player_velocity_y
     bra @exit_handle_input
 
 move_right:
-    lda #VEL_PL
-    sta @camera_velocity_x
-    stz @camera_velocity_y
+    sep #20
+    lda #PLAYER_VEL_PL
+    sta @player_velocity_x
+    stz @player_velocity_y
 
 exit_handle_input:
-    sep #20
+    plp
     rts

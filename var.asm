@@ -20,8 +20,10 @@ prev_player_x:            .rb 1           ; grid relative
 prev_player_y:            .rb 1
 player_velocity_x:        .rb 1
 player_velocity_y:        .rb 1
-player_sx:                .rb 1           ; on screen, pixel relative
-player_sy:                .rb 1
+player_px:                .rb 2           ; on screen, pixel relative
+player_py:                .rb 2
+player_velocity_px:       .rb 1
+player_velocity_py:       .rb 1
 player_anim_state:        .rb 1           ; which entry in animation table
 
 current_map:              .rb 3           ; pointer to current map (map should always be in same bank)

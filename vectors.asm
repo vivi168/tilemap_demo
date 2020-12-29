@@ -82,12 +82,13 @@ ResetVector:
     ; formula
     ; first param = map_index, = (camera_x + camera_y * width) / 8
     ; eg : camera_x = 0x268, camera_y = 0x38, pea 0x3cd
-    ldy #0168
-    sty @camera_x
-    ldy #0068
-    sty @camera_y
-    jsr @MapIndexFromScreenCoords ; result in Y
-    phy
+    ;ldy #0168
+    ;sty @camera_x
+    ;ldy #0068
+    ;sty @camera_y
+    ;jsr @MapIndexFromScreenCoords ; result in Y
+    ;phy
+    pea 0000
     pea 0000
     jsr @InitTilemapBuffer
     txs
