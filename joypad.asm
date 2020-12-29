@@ -1,14 +1,22 @@
+.define JOY_UP      0800
+.define JOY_DOWN    0400
+.define JOY_LEFT    0200
+.define JOY_RIGHT   0100
+
+.define VEL_PL      0002    ; positive velocity
+.define VEL_MI      fffe    ; negative velocity
+
 ReadJoyPad1:
     php
 read_joy1_data:
-    lda 4212            ; read joypad status (HVBJOY)
+    lda HVBJOY          ; read joypad status
     and #01
     bne @read_joy1_data ; read done when 0
 
     rep #30             ; m16, x16
 
     ldx @joy1_raw       ; read previous frame raw input
-    lda 4218            ; read current frame raw input (JOY1L)
+    lda JOY1L           ; read current frame raw input (JOY1L)
     sta @joy1_raw       ; save it
     txa                 ; move previous frame raw input to A
     eor @joy1_raw       ; XOR previous with current, get changes. Held and unpressed become 0
@@ -26,16 +34,16 @@ HandleInput:
 
     lda @joy1_held
 
-    bit #0800
+    bit #JOY_UP
     bne @move_up
 
-    bit #0400
+    bit #JOY_DOWN
     bne @move_down
 
-    bit #0200
+    bit #JOY_LEFT
     bne @move_left
 
-    bit #0100
+    bit #JOY_RIGHT
     bne @move_right
 
     stz @camera_velocity_x
@@ -43,25 +51,25 @@ HandleInput:
     bra @exit_handle_input
 
 move_up:
-    lda #fffe           ; negative velocity
+    lda #VEL_MI
     sta @camera_velocity_y
     stz @camera_velocity_x
     bra @exit_handle_input
 
 move_down:
-    lda #0002           ; positive velocity
+    lda #VEL_PL
     sta @camera_velocity_y
     stz @camera_velocity_x
     bra @exit_handle_input
 
 move_left:
-    lda #fffe
+    lda #VEL_MI
     sta @camera_velocity_x
     stz @camera_velocity_y
     bra @exit_handle_input
 
 move_right:
-    lda #0002
+    lda #VEL_PL
     sta @camera_velocity_x
     stz @camera_velocity_y
 
