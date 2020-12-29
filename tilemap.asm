@@ -7,6 +7,7 @@
 ;**************************************
 .65816
 
+.include registers.inc
 .include var.asm
 .include assets.asm
 

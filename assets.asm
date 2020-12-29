@@ -8,3 +8,8 @@ medium_map:               .incbin assets/medium.csv.bin
 big_map:                  .incbin assets/pkmn.csv.bin
 spritesheet:              .incbin assets/red.bin
 spritesheet_pal:          .incbin assets/red-pal.bin
+
+.define TILEMAP_SIZE 0800
+.define TILESET_SIZE 0a00
+.define PALETTE_SIZE 20
+.define SPRTSHT_SIZE 0400

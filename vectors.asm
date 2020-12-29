@@ -1,3 +1,5 @@
+.define STACK_SIZE 1fff
+
 ResetVector:
     sei                 ; disable interrupts
     clc
@@ -5,52 +7,52 @@ ResetVector:
     sep #20             ; M8
     rep #10             ; X16
 
-    ldx #1fff
+    ldx #STACK_SIZE
     txs                 ; set stack pointer to 1fff
 
     ; Forced Blank
     lda #80
-    sta 2100            ; INIDISP
+    sta INIDISP
     jsr @ClearRegisters
 
     ; ---- BG settings
     lda #01
-    sta 2105            ; BGMODE 1
+    sta BGMODE
 
     lda @bg_scroll_x    ; first write = lower byte
-    sta 210d
+    sta BG1HOFS
     lda #00             ; second write = upper 2 bits
-    sta 210d            ; horizontal scroll
+    sta BG1HOFS         ; horizontal scroll
     lda @bg_scroll_y
     dec
-    sta 210e
+    sta BG1VOFS
     lda #00
-    sta 210e            ; vertical scroll. caution, offset by -1
+    sta BG1VOFS         ; vertical scroll. caution, offset by -1
 
     lda #10             ; BG1 MAP @ VRAM[2000]
-    sta 2107            ; BG1SC
+    sta BG1SC
     lda #00             ; BG1 tiles @ VRAM[0000]
-    sta 210b            ; BG12NBA
+    sta BG12NBA
 
     lda #11             ; enable BG1 + sprites
-    sta 212c            ; TM
+    sta TM
 
     ; --- OBJ settings
     lda #62             ; sprite 16x16 small, 32x32 big
-    sta 2101            ; oam start @VRAM[8000]
+    sta OBJSEL          ; oam start @VRAM[8000]
 
     jsr @InitOamBuffer
     jsr @TransferOamBuffer
 
     ; --- windowing settings
     lda #03
-    sta 2123
+    sta W12SEL
     lda #08
-    sta 2126
+    sta WH0
     lda #f7
-    sta 2127
+    sta WH1
     lda #01
-    sta 212e
+    sta TMW
 
     ; --- some initialization
     rep #20
@@ -97,7 +99,7 @@ ResetVector:
     pea @tilemap_buffer
     lda #^tilemap_buffer
     pha
-    pea 0800            ; nb of bytes to transfer
+    pea TILEMAP_SIZE    ; nb of bytes to transfer
     jsr @VramDmaTransfer
     txs                 ; restore stack pointer
 
@@ -107,7 +109,7 @@ ResetVector:
     pea @tileset
     lda #^tileset
     pha
-    pea 0a00            ; nb of bytes to transfer
+    pea TILESET_SIZE    ; nb of bytes to transfer
     jsr @VramDmaTransfer
     txs                 ; restore stack pointer
 
@@ -118,7 +120,7 @@ ResetVector:
     pea @tileset_palette
     lda #^tileset_palette
     pha
-    lda #20             ; bytes_to_trasnfer
+    lda #PALETTE_SIZE   ; bytes_to_trasnfer
     pha
     jsr @CgramDmaTransfer
     txs                 ; restore stack pointer
@@ -129,7 +131,7 @@ ResetVector:
     pea @spritesheet
     lda #^spritesheet
     pha
-    pea 0400        ; bytes_to_trasnfer
+    pea SPRTSHT_SIZE; bytes_to_trasnfer
     jsr @VramDmaTransfer
     txs             ; restore stack pointer
 
@@ -140,7 +142,7 @@ ResetVector:
     pea @spritesheet_pal
     lda #^spritesheet_pal
     pha
-    lda #20             ; bytes_to_trasnfer
+    lda #PALETTE_SIZE   ; bytes_to_trasnfer
     pha
     jsr @CgramDmaTransfer
     txs                 ; restore stack pointer
@@ -148,10 +150,10 @@ ResetVector:
     ; ----
 
     lda #0f             ; release forced blanking, set screen to full brightness
-    sta 2100            ; INIDISP
+    sta INIDISP
 
     lda #81             ; enable NMI, turn on automatic joypad polling
-    sta 4200            ; NMITIMEN
+    sta NMITIMEN
     cli                 ; enable interrupts
 
     jmp @MainLoop
@@ -169,20 +171,20 @@ NmiVector:
     sep #20
     rep #10
 
-    lda 4210            ; RDNMI
+    lda RDNMI
 
     jsr @ReadJoyPad1
 
     lda @bg_scroll_x
-    sta 210d
+    sta BG1HOFS
     lda #00
-    sta 210d
+    sta BG1HOFS
 
     lda @bg_scroll_y
     dec                 ; Y scroll is offset by -1 (hardware quirk)
-    sta 210e
+    sta BG1VOFS
     lda #00
-    sta 210e
+    sta BG1VOFS
 
     ; Copy tilemap buffer to VRAM
     tsx                 ; save stack pointer
@@ -190,7 +192,7 @@ NmiVector:
     pea @tilemap_buffer
     lda #^tilemap_buffer
     pha
-    pea 0800            ; nb of bytes to transfer
+    pea TILEMAP_SIZE    ; nb of bytes to transfer
     jsr @VramDmaTransfer
     txs                 ; restore stack pointer
 
