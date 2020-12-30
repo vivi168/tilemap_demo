@@ -114,6 +114,8 @@ ClearRegisters:
 
     stz @player_px
     stz @player_py
+    stz @player_velocity_px
+    stz @player_velocity_py
 
     sep #20
 

@@ -9,6 +9,9 @@
 .define PLAYER_VEL_PL 01
 .define PLAYER_VEL_MI ff
 
+.define PLAYER_VEL_PL16 0001
+.define PLAYER_VEL_MI16 ffff
+
 ReadJoyPad1:
     php
 read_joy1_data:
@@ -34,9 +37,31 @@ read_joy1_data:
 
 HandleInput:
     php
-    rep #20
 
-    lda @joy1_press
+    ; don't register input if player is moving
+    ; (player.x * 8 != player.px => player is moving)
+    sep #20
+    lda @player_x
+    rep #20
+    and #00ff
+    asl
+    asl
+    asl
+    cmp @player_px
+    bne @clean_exit_handle_input
+
+    sep #20
+
+    lda @player_y
+    rep #20
+    and #00ff
+    asl
+    asl
+    asl
+    cmp @player_py
+    bne @clean_exit_handle_input
+
+    lda @joy1_held
 
     bit #JOY_UP
     bne @move_up
@@ -50,6 +75,7 @@ HandleInput:
     bit #JOY_RIGHT
     bne @move_right
 
+clean_exit_handle_input:
     sep #20
 
     stz @player_velocity_x
@@ -57,6 +83,8 @@ HandleInput:
     bra @exit_handle_input
 
 move_up:
+    lda #PLAYER_VEL_MI16
+    sta @player_velocity_py
     sep #20
     lda #PLAYER_VEL_MI
     sta @player_velocity_y
@@ -64,6 +92,8 @@ move_up:
     bra @exit_handle_input
 
 move_down:
+    lda #PLAYER_VEL_PL16
+    sta @player_velocity_py
     sep #20
     lda #PLAYER_VEL_PL
     sta @player_velocity_y
@@ -71,6 +101,8 @@ move_down:
     bra @exit_handle_input
 
 move_left:
+    lda #PLAYER_VEL_MI16
+    sta @player_velocity_px
     sep #20
     lda #PLAYER_VEL_MI
     sta @player_velocity_x
@@ -78,6 +110,8 @@ move_left:
     bra @exit_handle_input
 
 move_right:
+    lda #PLAYER_VEL_PL16
+    sta @player_velocity_px
     sep #20
     lda #PLAYER_VEL_PL
     sta @player_velocity_x

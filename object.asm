@@ -36,7 +36,9 @@ DrawSprite:
 UpdatePlayer:
     php
 
-    ;;; X COORD
+    ;;; X COORD. skip if velocity_x = 0
+    lda @player_velocity_x
+    beq @update_px
 
     lda @player_x
     sta @prev_player_x
@@ -47,16 +49,29 @@ UpdatePlayer:
 
     ; TODO keep player X coord in bound here
 
-    ; player px = player.x * 8
+update_px:
+    lda @player_x
+    ; player px += velocity_px if player.x*8 != player.px
     rep #20
     and #00ff
     asl
     asl
     asl
+    cmp @player_px
+    ; if player.x * 8 == player.px, skip. else, increment
+    beq @skip_update_px
+    lda @player_velocity_px
+    clc
+    adc @player_px
     sta @player_px
+
+skip_update_px:
+
     sep #20
 
-    ;;; Y COORD
+    ;;; Y COORD. skip if velocity_y = 0
+    lda @player_velocity_y
+    beq @update_py
 
     lda @player_y
     sta @prev_player_y
@@ -67,19 +82,25 @@ UpdatePlayer:
 
     ; TODO keep player Y coord in bound here
 
-    ; player py = player.y * 8
+update_py:
+    lda @player_y
+    ; player py += velocity_py if player.y*8 != player.py
     rep #20
     and #00ff
     asl
     asl
     asl
+    cmp @player_py
+    ; if player.y * 8 == player.py, skip. else, increment
+    beq @skip_update_py
+    lda @player_velocity_py
+    clc
+    adc @player_py
     sta @player_py
 
-    ;sep #20
+skip_update_py:
 
     jsr @UpdateCamera
-
-
 
     ;;; UPDATE OAM
 
