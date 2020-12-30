@@ -11,7 +11,7 @@ camera_x:                 .rb 2           ; camera top left corner
 camera_y:                 .rb 2
 prev_camera_x:            .rb 2
 prev_camera_y:            .rb 2
-camera_velocity_x:        .rb 2
+camera_velocity_x:        .rb 2           ; for when camera moves by itself (cutscene?)
 camera_velocity_y:        .rb 2
 
 player_x:                 .rb 1           ; on tilemap, grid relative

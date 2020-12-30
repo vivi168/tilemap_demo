@@ -1,6 +1,8 @@
 .define OAML_SIZE   0200
 .define OAM_SIZE    0220
 
+.define ANIMATION_SPEED 02 ; change animation every X frame
+
 ; clear oam buffer with off screen sprites
 InitOamBuffer:
     php

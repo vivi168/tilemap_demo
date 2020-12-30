@@ -6,9 +6,12 @@
 .define VEL_PL      0002    ; positive velocity
 .define VEL_MI      fffe    ; negative velocity
 
+; player move 1 cell by 1 cell
 .define PLAYER_VEL_PL 01
 .define PLAYER_VEL_MI ff
 
+; to make player move quicker, adjust
+; OR adjust frequency at which px/py are incremented (every X frame % speed)
 .define PLAYER_VEL_PL16 0001
 .define PLAYER_VEL_MI16 ffff
 
