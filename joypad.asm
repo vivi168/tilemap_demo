@@ -49,6 +49,7 @@ HandleInput:
     asl
     cmp @player_px
     bne @clean_exit_handle_input
+    stz @player_velocity_px
 
     sep #20
 
@@ -60,6 +61,7 @@ HandleInput:
     asl
     cmp @player_py
     bne @clean_exit_handle_input
+    stz @player_velocity_py
 
     lda @joy1_held
 
