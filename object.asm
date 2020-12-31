@@ -3,7 +3,11 @@
 
 .define ANIMATION_SPEED 02 ; change animation every X frame
 
+;**************************************
+;
 ; clear oam buffer with off screen sprites
+;
+;**************************************
 InitOamBuffer:
     php
     sep #20
@@ -34,7 +38,11 @@ set_x_msb:
 DrawSprite:
     rts
 
+;**************************************
+;
 ; input in X : sprite index
+;
+;**************************************
 UpdatePlayer:
     php
 
@@ -132,9 +140,11 @@ skip_update_py:
     plp
     rts
 
+;**************************************
 ; set OAM hi params
 ; input in X : sprite index
 ; input in A : status
+;**************************************
 SetSpriteStatus:
     lda #54
     sta !oam_buffer_hi
