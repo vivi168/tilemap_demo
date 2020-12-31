@@ -44,9 +44,8 @@ UpdatePlayer:
 
     lda @player_x
     sta @prev_player_x
-    lda @player_velocity_x
     clc
-    adc @player_x
+    adc @player_velocity_x
     sta @player_x
 
     ; TODO keep player X coord in bound here
@@ -77,9 +76,8 @@ skip_update_px:
 
     lda @player_y
     sta @prev_player_y
-    lda @player_velocity_y
     clc
-    adc @player_y
+    adc @player_velocity_y
     sta @player_y
 
     ; TODO keep player Y coord in bound here
