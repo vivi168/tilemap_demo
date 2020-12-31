@@ -60,14 +60,15 @@ UpdatePlayer:
 
 update_px:
     lda @player_x
-    ; player px += velocity_px if player.x*8 != player.px
+    ; player px += velocity_px if player.x*16 != player.px
     rep #20
     and #00ff
     asl
     asl
     asl
+    asl
     cmp @player_px
-    ; if player.x * 8 == player.px, skip. else, increment
+    ; if player.x * 16 == player.px, skip. else, increment
     beq @skip_update_px
     lda @player_velocity_px
     clc
@@ -92,14 +93,15 @@ skip_update_px:
 
 update_py:
     lda @player_y
-    ; player py += velocity_py if player.y*8 != player.py
+    ; player py += velocity_py if player.y*16 != player.py
     rep #20
     and #00ff
     asl
     asl
     asl
+    asl
     cmp @player_py
-    ; if player.y * 8 == player.py, skip. else, increment
+    ; if player.y * 16 == player.py, skip. else, increment
     beq @skip_update_py
     lda @player_velocity_py
     clc

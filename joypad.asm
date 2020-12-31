@@ -41,28 +41,18 @@ read_joy1_data:
 HandleInput:
     php
 
-    ; don't register input if player is moving
-    ; (player.x * 8 != player.px => player is moving)
-    sep #20
-    lda @player_x
     rep #20
-    and #00ff
-    asl
-    asl
-    asl
-    cmp @player_px
+    ; don't register input if player is moving
+    ; player is moving if coord % 16 != 0
+    lda @player_px
+    bit #000f
     bne @clean_exit_handle_input
     stz @player_velocity_px
 
-    sep #20
-
-    lda @player_y
-    rep #20
-    and #00ff
-    asl
-    asl
-    asl
-    cmp @player_py
+    lda @player_py
+    ; don't register input if player is moving
+    ; player is moving if coord % 16 != 0
+    bit #000f
     bne @clean_exit_handle_input
     stz @player_velocity_py
 
