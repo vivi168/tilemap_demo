@@ -104,6 +104,7 @@ ClearRegisters:
     stz @prev_player_y
     stz @player_velocity_x
     stz @player_velocity_y
+    stz @player_anim_state
 
 
     rep #20

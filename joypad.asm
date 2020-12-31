@@ -3,6 +3,11 @@
 .define JOY_LEFT    0200
 .define JOY_RIGHT   0100
 
+.define STAND_DOWN  00
+.define STAND_UP    01
+.define STAND_LEFT  02
+.define STAND_RIGHT 03
+
 .define VEL_PL      0002    ; positive velocity
 .define VEL_MI      fffe    ; negative velocity
 
@@ -84,6 +89,8 @@ move_up:
     lda #PLAYER_VEL_MI
     sta @player_velocity_y
     stz @player_velocity_x
+    lda #STAND_UP
+    sta @player_anim_state
     bra @exit_handle_input
 
 move_down:
@@ -93,6 +100,7 @@ move_down:
     lda #PLAYER_VEL_PL
     sta @player_velocity_y
     stz @player_velocity_x
+    stz @player_anim_state
     bra @exit_handle_input
 
 move_left:
@@ -102,6 +110,8 @@ move_left:
     lda #PLAYER_VEL_MI
     sta @player_velocity_x
     stz @player_velocity_y
+    lda #STAND_LEFT
+    sta @player_anim_state
     bra @exit_handle_input
 
 move_right:
@@ -111,6 +121,8 @@ move_right:
     lda #PLAYER_VEL_PL
     sta @player_velocity_x
     stz @player_velocity_y
+    lda #STAND_RIGHT
+    sta @player_anim_state
 
 exit_handle_input:
     plp
