@@ -106,6 +106,7 @@ ClearRegisters:
     stz @player_velocity_y
     stz @player_anim_state
 
+    stz @frame_counter
 
     rep #20
     stz @camera_x
