@@ -1,7 +1,16 @@
 .define OAML_SIZE   0200
 .define OAM_SIZE    0220
 
-.define ANIMATION_SPEED 02 ; change animation every X frame
+.define FRAME_STEP 0f ; change animation every X frame
+
+.define STAND_DOWN  00
+.define WALK_DOWN   02
+.define STAND_UP    07
+.define WALK_UP     09
+.define STAND_LEFT  0e
+.define WALK_LEFT   10
+.define STAND_RIGHT 13
+.define WALK_RIGHT  15
 
 ;**************************************
 ;
@@ -50,6 +59,10 @@ UpdatePlayer:
     lda @player_velocity_x
     beq @update_px
 
+    ; move horizontaly, so previous Y coord is now same as current
+    lda @player_y
+    sta @prev_player_y
+
     lda @player_x
     sta @prev_player_x
     clc
@@ -82,6 +95,10 @@ skip_update_px:
     ;;; Y COORD. skip if velocity_y = 0
     lda @player_velocity_y
     beq @update_py
+
+    ; move vertically, so previous X coord is now same as current
+    lda @player_x
+    sta @prev_player_x
 
     lda @player_y
     sta @prev_player_y
@@ -134,11 +151,7 @@ UpdatePlayerOAM:
     sep #20
     sta !oam_buffer+1
 
-    ; tile_no (get from player state)
-    sep #10
-    ldx @player_anim_state
-    lda @PlayerAnimTable,x
-    rep #10
+    jsr @FindAnimTileNo
 
     bit #80
     bpl @skip_sprite_flip
@@ -169,12 +182,82 @@ update_oam_hi:
     plp
     rts
 
+; result in A
+FindAnimTileNo:
+    ;;; TODO
+    ; ; step 1: set state
+    ;
+    ; if (velocity_px == 0) {
+    ; 	state = x > prev_x ? STANDING_RIGHT : STANDING_LEFT;
+    ; } else {
+    ; 	state = vel_x.positive? ? WALK_RIGHT : WALK_LEFT;
+    ; }
+
+;;     lda @player_velocity_px
+;;     beq @check_hor_standing_state
+;;
+;;     bpl @set_walk_right_state
+;;
+;;     lda #WALK_LEFT
+;;     sta @player_anim_state
+;;     bra @select_anim_frame
+;; set_walk_right_state:
+;;     lda #WALK_RIGHT
+;;     sta @player_anim_state
+;;     bra @select_anim_frame
+;;
+;; check_hor_standing_state:
+;;     lda @player_x
+;;     cmp @prev_player_x
+;;     beq @check_vert_anim_state
+;;
+;;     bcc @set_stand_left_state
+;;     lda #STAND_RIGHT
+;;     sta @player_anim_state
+;;     bra @select_anim_frame
+;; set_stand_left_state:
+;;     lda #STAND_LEFT
+;;     sta @player_anim_state
+;;     bra @select_anim_frame
+;;
+;; check_vert_anim_state:
+
+    lda #WALK_DOWN
+    sta @player_anim_state
+
+select_anim_frame:
+    lda @frame_counter
+    bit #FRAME_STEP
+    bne @skip_frame_update
+    inc @player_anim_frame
+skip_frame_update:
+    ; tile_no (get from player state)
+    sep #10
+
+    lda @player_anim_frame
+    clc
+    adc @player_anim_state
+    tax
+
+    lda @PlayerAnimTable,x
+    cmp #ff
+    bne @exit_find_anim_tileno
+    ; loop back at animation beginning
+    stz @player_anim_frame
+    ldx @player_anim_state
+    lda @PlayerAnimTable,x
+
+exit_find_anim_tileno:
+    rep #10
+    rts
+
+
 PlayerAnimTable:
-stand_down:     .db 02          ; [0]
-stand_up:       .db 08          ; [1]
-stand_left:     .db 0e          ; [2]
-stand_right:    .db 8e          ; [3] if (128 & idx == 128 => idx = 128 ^ idx => flip sprite horizontal)
-walk_down:      .db 00, 01, 02  ; [4]
-walk_up:        .db 03, 04, 05  ; [5]
-walk_left:      .db 06, 07      ; [6]
-walk_right:     .db 86, 87      ; [7]
+stand_down:     .db 02, ff              ; [0] ff marks end of entry
+walk_down:      .db 00, 02, 04, 02, ff  ; [2]
+stand_up:       .db 08, ff              ; [7]
+walk_up:        .db 06, 08, 0a, 08, ff  ; [9]
+stand_left:     .db 0e, ff              ; [14]
+walk_left:      .db 0c, 0e, ff          ; [16]
+stand_right:    .db 8e, ff              ; [19] if value is negative, flip sprite
+walk_right:     .db 8c, 8e, ff          ; [21]

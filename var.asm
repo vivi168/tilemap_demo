@@ -25,6 +25,7 @@ player_py:                .rb 2
 player_velocity_px:       .rb 2
 player_velocity_py:       .rb 2
 player_anim_state:        .rb 1           ; which entry in animation table
+player_anim_frame:        .rb 1           ; which frame in animation table
 
 current_map:              .rb 3           ; pointer to current map (map should always be in same bank)
 current_map_width:        .rb 2           ; width of current map (in tiles)
