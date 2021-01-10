@@ -184,47 +184,24 @@ update_oam_hi:
 
 ; result in A
 FindAnimTileNo:
-    ;;; TODO
-    ; ; step 1: set state
-    ;
-    ; if (velocity_px == 0) {
-    ; 	state = x > prev_x ? STANDING_RIGHT : STANDING_LEFT;
-    ; } else {
-    ; 	state = vel_x.positive? ? WALK_RIGHT : WALK_LEFT;
-    ; }
+    lda @player_anim_state
+    sta @player_prev_anim_state
 
-;;     lda @player_velocity_px
-;;     beq @check_hor_standing_state
-;;
-;;     bpl @set_walk_right_state
-;;
-;;     lda #WALK_LEFT
-;;     sta @player_anim_state
-;;     bra @select_anim_frame
-;; set_walk_right_state:
-;;     lda #WALK_RIGHT
-;;     sta @player_anim_state
-;;     bra @select_anim_frame
-;;
-;; check_hor_standing_state:
-;;     lda @player_x
-;;     cmp @prev_player_x
-;;     beq @check_vert_anim_state
-;;
-;;     bcc @set_stand_left_state
-;;     lda #STAND_RIGHT
-;;     sta @player_anim_state
-;;     bra @select_anim_frame
-;; set_stand_left_state:
-;;     lda #STAND_LEFT
-;;     sta @player_anim_state
-;;     bra @select_anim_frame
-;;
-;; check_vert_anim_state:
+    lda @player_velocity_px
+    beq @check_moving_vertically
+    jsr @MovingHorizontaly
+    bra @select_anim_frame
 
-    lda #WALK_DOWN
-    sta @player_anim_state
+check_moving_vertically:
+    lda @player_velocity_py
+    beq @select_idle_sprite
+    jsr @MovingVerticaly
+    bra @select_anim_frame
 
+select_idle_sprite:
+    jsr @IdleSprite
+
+; --- select animation frame ---
 select_anim_frame:
     lda @frame_counter
     bit #FRAME_STEP
@@ -251,6 +228,35 @@ exit_find_anim_tileno:
     rep #10
     rts
 
+MovingHorizontaly:
+    lda #WALK_LEFT
+    sta @player_anim_state
+check_prev_hori_anim_state:
+    cmp @player_prev_anim_state
+    beq @quit_moving_hori
+    stz @player_anim_frame
+quit_moving_hori:
+    rts
+
+MovingVerticaly:
+    lda #WALK_DOWN
+    sta @player_anim_state
+check_prev_vert_anim_state:
+    cmp @player_prev_anim_state
+    beq @quit_moving_vert
+    stz @player_anim_frame
+quit_moving_vert:
+    rts
+
+IdleSprite:
+    lda #STAND_DOWN
+    sta @player_anim_state
+check_prev_idl_anim_state:
+    cmp @player_prev_anim_state
+    beq @quit_idle_sprite
+    stz @player_anim_frame
+quit_idle_sprite:
+    rts
 
 PlayerAnimTable:
 stand_down:     .db 02, ff              ; [0] ff marks end of entry
