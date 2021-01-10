@@ -229,8 +229,16 @@ exit_find_anim_tileno:
     rts
 
 MovingHorizontaly:
+    lda @player_velocity_px
+    bpl @set_mov_hor_right_state
     lda #WALK_LEFT
     sta @player_anim_state
+    bra @check_prev_hori_anim_state
+
+set_mov_hor_right_state:
+    lda #WALK_RIGHT
+    sta @player_anim_state
+
 check_prev_hori_anim_state:
     cmp @player_prev_anim_state
     beq @quit_moving_hori
@@ -239,8 +247,16 @@ quit_moving_hori:
     rts
 
 MovingVerticaly:
+    lda @player_velocity_py
+    bpl @set_mov_ver_down_state
+    lda #WALK_UP
+    sta @player_anim_state
+    bra @check_prev_vert_anim_state
+
+set_mov_ver_down_state:
     lda #WALK_DOWN
     sta @player_anim_state
+
 check_prev_vert_anim_state:
     cmp @player_prev_anim_state
     beq @quit_moving_vert
@@ -249,8 +265,30 @@ quit_moving_vert:
     rts
 
 IdleSprite:
+    lda @player_x
+    cmp @prev_player_x
+    beq @check_vert_idl_state
+    bcc @set_idl_left_state
+    lda #STAND_RIGHT
+    sta @player_anim_state
+    bra @check_prev_idl_anim_state
+
+set_idl_left_state:
+    lda #STAND_LEFT
+    sta @player_anim_state
+    bra @check_prev_idl_anim_state
+
+check_vert_idl_state:
+    lda @player_y
+    cmp @prev_player_y
+    bcc @set_idl_up_state
     lda #STAND_DOWN
     sta @player_anim_state
+    bra @check_prev_idl_anim_state
+set_idl_up_state:
+    lda #STAND_UP
+    sta @player_anim_state
+
 check_prev_idl_anim_state:
     cmp @player_prev_anim_state
     beq @quit_idle_sprite
