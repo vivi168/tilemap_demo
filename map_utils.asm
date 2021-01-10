@@ -7,10 +7,11 @@ UpdateCamera:
     lda @camera_x
     sta @prev_camera_x
 
-    ; camera_x = player.px - SCREEN_W / 2
+    ; camera_x = player.px - SCREEN_W / 2 - player_w/2
+    ; TODO don't forget to adjust for player real width
     lda @player_px
     sec
-    sbc #0080
+    sbc #0078
     sta @camera_x
 
     ; if camera_x < 0, camera_x = prev
@@ -33,10 +34,11 @@ check_camera_y:
     lda @camera_y
     sta @prev_camera_y
 
-    ; camera_y = player.py - SCREEN_H / 2
+    ; camera_y = player.py - SCREEN_H / 2 - player_h / 2
+    ; TODO don't forget to adjust for player real height
     lda @player_py
     sec
-    sbc #0070
+    sbc #0068
     sta @camera_y
 
     ; if camera_y < 0, camera_y = prev
