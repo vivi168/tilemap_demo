@@ -11,7 +11,7 @@
 .include var.asm
 .include assets.asm
 
-.org 008000
+.org 808000
 .base 0000
 
 .include vectors.asm

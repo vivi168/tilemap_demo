@@ -1,4 +1,4 @@
-.org 018000
+.org 818000
 .base 8000
 
 tileset:                  .incbin assets/pkmn.bin

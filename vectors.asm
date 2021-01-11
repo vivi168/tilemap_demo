@@ -1,6 +1,8 @@
 .define STACK_SIZE 1fff
 
 ResetVector:
+    jmp !FastReset
+FastReset:
     sei                 ; disable interrupts
     clc
     xce
@@ -9,6 +11,9 @@ ResetVector:
 
     ldx #STACK_SIZE
     txs                 ; set stack pointer to 1fff
+
+    lda #01
+    sta @MEMSEL
 
     ; Forced Blank
     lda #80
