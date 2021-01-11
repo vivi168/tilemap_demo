@@ -1,7 +1,7 @@
 .define OAML_SIZE   0200
 .define OAM_SIZE    0220
 
-.define FRAME_STEP 0f ; change animation every X frame
+.define FRAME_STEP 07 ; change animation every X frame
 
 .define STAND_DOWN  00
 .define WALK_DOWN   02
