@@ -1,11 +1,12 @@
 .define STACK_SIZE 1fff
 
 ResetVector:
-    jmp !FastReset
-FastReset:
     sei                 ; disable interrupts
     clc
     xce
+    cld
+    jmp !FastReset
+FastReset:
     sep #20             ; M8
     rep #10             ; X16
 
