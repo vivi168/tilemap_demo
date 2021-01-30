@@ -185,7 +185,7 @@ NmiVector:
 
     lda RDNMI
 
-    jsr @ReadJoyPad1
+    inc @frame_counter
 
     lda @bg_scroll_x
     sta BG1HOFS
@@ -209,6 +209,8 @@ NmiVector:
     txs                 ; restore stack pointer
 
     jsr @TransferOamBuffer
+
+    jsr @ReadJoyPad1
 
     rep #30
     ply

@@ -24,8 +24,6 @@
 MainLoop:
     wai
 
-    inc @frame_counter
-
     jsr @HandleInput
     jsr @UpdatePlayer
     jsr @UpdateBGScroll
