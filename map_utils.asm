@@ -142,7 +142,6 @@ update_column_ahead:
 copy_new_column:
     phy
     phx
-    brk 00
     jsr @CopyMapColumnToTileMapBuffer
     plx
     ply
@@ -204,7 +203,6 @@ update_row_ahead:
 copy_new_row:
     phy
     phx
-    brk 00
     jsr @CopyMapRowToTileMapBuffer
     plx
     ply
@@ -272,7 +270,6 @@ MapIndexFromScreenCoords:
     lda @current_map_width ; should always be 8 bits (<= 255)
     sta 4202 ; multiplicand 1
 
-    brk 00
     rep #20
     lda @camera_y
     ; camera_y //= 8
@@ -380,21 +377,23 @@ CopyMapRowToTileMapBuffer:
     phd
 
     ; --- reserve local variables on the stack
-    lda @current_map+2
+    lda @current_map+2  ; push current map bank (rom)
     pha
-    ldx @current_map
+    ldx @current_map    ; push current map address (rom)
     phx
     lda #20
-    pha                 ; loop counter
+    pha                 ; push loop counter
 
     tsc
     tcd                 ; create a local frame
+    ; local frame: 01 -> loop counter, 02 -> current_map address, 04 -> current_map bank
+    ; 0b -> buffer write offset, 0d -> map read offset
 
     ldy 0d              ; map read start initial map offset
     ldx 0b              ; load tilemap buffer write start offset
 
 copy_row_loop:
-    lda [02],y
+    lda [02],y          ; !current_map + y
     iny
     sta !tilemap_buffer,x
     inx

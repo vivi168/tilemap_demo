@@ -78,6 +78,7 @@ FastReset:
     asl
     sta @current_map_height_pixel
     sep #20
+    ; store address of map
     ldx #@big_map+4
     stx @current_map
     lda #^big_map+4
